@@ -1,0 +1,5 @@
+{"name":"chef/listener","scripts":{"start":["sudo systemctl start mariadb","php test_Db.php","php listener.php","php amqp_comsumer.php"]},
+    "require": {
+        "php-amqplib/php-amqplib": "^3.7"
+    }
+}
