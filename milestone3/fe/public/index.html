@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FreeSpirit Sips</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <header class="topbar" id="top">
+        <a class="brand" href="index.html">🍵 FreeSpirit Sips</a>
+        <nav class="dash" aria-label="Main">
+            <a class="dash-btn" href="index.html" aria-current="page">🏠 Home</a>
+            <a class="dash-btn" href="menu.html">🍽️ Menu</a>
+            <a class="dash-btn" href="index.html#info">ℹ️ Information</a>
+            <button class="dash-btn" type="button" title="Settings (coming soon)">⚙️ Settings</button>
+        </nav>
+        <form class="search" action="menu.html" method="get" role="search">
+            <input type="search" name="q" placeholder="Search drinks..." aria-label="Search drinks">
+            <button type="submit">Search</button>
+        </form>
+    </header>
+
+    <main>
+        <span class="badge">Port 7812 Online</span>
+        <h1>Hello World!</h1>
+        <p class="tagline">Welcome to FreeSpirit Sips</p>
+
+        <section class="info-card" id="info">
+            <h2>About</h2>
+            <p>FreeSpirit Sips is a drink-menu site.</p>
+            <p>Browse the menu, or use the search bar to look up a drink.</p>
+        </section>
+
+        <div class="card-small">
+            <h3>Logging check</h3>
+            <p>Send a test message to the q_central_logging queue.</p>
+            <button id="sendLogBtn" class="btn-orange">Transmit Test Log to RMQ</button>
+            <div id="output" class="log-box">Awaiting trigger...</div>
+        </div>
+    </main>
+
+    <div class="sip-border">
+        <div class="sip-row" aria-hidden="true">
+            <span>🍵</span><span>🫖</span><span>🥥</span><span>🥤</span><span>🧋</span><span>🧃</span><span>🍋</span><span>🍹</span><span>🧊</span><span>🍵</span><span>🥥</span><span>🥤</span>
+        </div>
+        <footer class="site-footer">
+            <p>IT 490: Team 1</p>
+        </footer>
+    </div>
+
+    <div class="card">
+        <h3>Milestone 2: Centralized Logging Verification</h3>
+        <p style="color: #94a3b8; font-size: 0.95rem;">
+            Customize the query syntax and log message sent to RabbitMQ (<code>q_central_logging</code>):
+        </p>
+
+        <!-- Custom Log Level & Query Message Inputs -->
+        <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+            <select id="logLevel"
+                style="padding: 8px; border-radius: 4px; background: #020617; color: white; border: 1px solid #334155;">
+                <option value="INFO">INFO</option>
+                <option value="DEBUG">DEBUG</option>
+                <option value="WARNING">WARNING</option>
+                <option value="ERROR">ERROR</option>
+            </select>
+            <input type="text" id="logMessage" value="Hello World!!! Frontend Heartbeat Ping"
+                style="flex: 1; padding: 8px 12px; border-radius: 4px; background: #020617; color: white; border: 1px solid #334155;">
+        </div>
+
+        <button id="sendLogBtn">Transmit Custom RMQ Query</button>
+        <div id="output" class="log-box">Awaiting trigger...</div>
+    </div>
+
+    <script>
+        document.getElementById('sendLogBtn').addEventListener('click', async () => {
+            const out = document.getElementById('output');
+            const customMessage = document.getElementById('logMessage').value;
+            const selectedLevel = document.getElementById('logLevel').value;
+
+            out.textContent = "Publishing payload to RabbitMQ...";
+            try {
+                const res = await fetch('/api/log', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        level: selectedLevel,
+                        message: customMessage
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    out.textContent = `[SUCCESS] Published to 'q_central_logging' with message: "${customMessage}" at ${new Date().toLocaleTimeString()}`;
+                } else {
+                    out.textContent = `[ERROR] Failed to publish: ${data.error}`;
+                }
+            } catch (err) {
+                out.textContent = `[FETCH ERROR] ${err.message}`;
+            }
+        });
+    </script>
+</body>
+
+</html>

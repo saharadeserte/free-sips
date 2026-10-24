@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menu | FreeSpirit Sips</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="topbar" id="top">
+        <a class="brand" href="index.html">🍵 FreeSpirit Sips</a>
+        <nav class="dash" aria-label="Main">
+            <a class="dash-btn" href="index.html">🏠 Home</a>
+            <a class="dash-btn" href="menu.html" aria-current="page">🍽️ Menu</a>
+            <a class="dash-btn" href="index.html#info">ℹ️ Information</a>
+            <button class="dash-btn" type="button" title="Settings (coming soon)">⚙️ Settings</button>
+        </nav>
+        <form class="search" action="menu.html" method="get" role="search">
+            <input type="search" name="q" placeholder="Search drinks..." aria-label="Search drinks">
+            <button type="submit">Search</button>
+        </form>
+    </header>
+
+    <main>
+        <h1>Menu</h1>
+        <p class="menu-intro">Prep time, rating and tags for each sip.</p>
+        <ol class="menu-list">
+            <li class="menu-item">
+                <span class="menu-icon" aria-hidden="true">🍵</span>
+                <div><h3 class="menu-name">Ceremonial Matcha Latte</h3><p class="menu-desc">Stone-ground matcha whisked with oat milk.</p></div>
+                <div class="menu-meta"><span class="prep">⏱ 4 min</span><span class="stars" role="img" aria-label="Rated 5 out of 5">★★★★★</span></div>
+                <ul class="tags" aria-label="Difficulty and dietary tags"><li class="tag" title="Easy"><span aria-hidden="true">✅</span>Easy</li><li class="tag" title="Vegan"><span aria-hidden="true">🌱</span>Vegan</li><li class="tag" title="Gluten-free"><span aria-hidden="true">🌾</span>Gluten-free</li></ul>
+            </li>
+            <li class="menu-item">
+                <span class="menu-icon" aria-hidden="true">🎃</span>
+                <div><h3 class="menu-name">Pumpkin Spice Coffee</h3><p class="menu-desc">Cold brew with pumpkin, cinnamon and nutmeg.</p></div>
+                <div class="menu-meta"><span class="prep">⏱ 6 min</span><span class="stars" role="img" aria-label="Rated 4 out of 5">★★★★<span class="off">★</span></span></div>
+                <ul class="tags" aria-label="Difficulty and dietary tags"><li class="tag" title="Easy"><span aria-hidden="true">✅</span>Easy</li><li class="tag" title="Gluten-free"><span aria-hidden="true">🌾</span>Gluten-free</li></ul>
+            </li>
+            <li class="menu-item">
+                <span class="menu-icon" aria-hidden="true">🥥</span>
+                <div><h3 class="menu-name">Fresh Coconut Water</h3><p class="menu-desc">Chilled and served straight from the coconut.</p></div>
+                <div class="menu-meta"><span class="prep">⏱ 1 min</span><span class="stars" role="img" aria-label="Rated 5 out of 5">★★★★★</span></div>
+                <ul class="tags" aria-label="Difficulty and dietary tags"><li class="tag" title="Easy"><span aria-hidden="true">✅</span>Easy</li><li class="tag" title="Vegan"><span aria-hidden="true">🌱</span>Vegan</li><li class="tag" title="Gluten-free"><span aria-hidden="true">🌾</span>Gluten-free</li></ul>
+            </li>
+            <li class="menu-item">
+                <span class="menu-icon" aria-hidden="true">🫖</span>
+                <div><h3 class="menu-name">Chai Tea Latte</h3><p class="menu-desc">Spiced black tea with steamed milk and honey.</p></div>
+                <div class="menu-meta"><span class="prep">⏱ 7 min</span><span class="stars" role="img" aria-label="Rated 4 out of 5">★★★★<span class="off">★</span></span></div>
+                <ul class="tags" aria-label="Difficulty and dietary tags"><li class="tag" title="Easy"><span aria-hidden="true">✅</span>Easy</li><li class="tag" title="Gluten-free"><span aria-hidden="true">🌾</span>Gluten-free</li></ul>
+            </li>
+            <li class="menu-item">
+                <span class="menu-icon" aria-hidden="true">🧋</span>
+                <div><h3 class="menu-name">Taro Boba Milk Tea</h3><p class="menu-desc">Creamy taro with chewy tapioca pearls.</p></div>
+                <div class="menu-meta"><span class="prep">⏱ 10 min</span><span class="stars" role="img" aria-label="Rated 4 out of 5">★★★★<span class="off">★</span></span></div>
+                <ul class="tags" aria-label="Difficulty and dietary tags"><li class="tag" title="Gluten-free"><span aria-hidden="true">🌾</span>Gluten-free</li></ul>
+            </li>
+            <li class="menu-item">
+                <span class="menu-icon" aria-hidden="true">🥤</span>
+                <div><h3 class="menu-name">Lemon Ginger Soda</h3><p class="menu-desc">Sparkling water, fresh lemon and ginger syrup.</p></div>
+                <div class="menu-meta"><span class="prep">⏱ 5 min</span><span class="stars" role="img" aria-label="Rated 4 out of 5">★★★★<span class="off">★</span></span></div>
+                <ul class="tags" aria-label="Difficulty and dietary tags"><li class="tag" title="Easy"><span aria-hidden="true">✅</span>Easy</li><li class="tag" title="Vegan"><span aria-hidden="true">🌱</span>Vegan</li><li class="tag" title="Gluten-free"><span aria-hidden="true">🌾</span>Gluten-free</li></ul>
+            </li>
+        </ol>
+        <p id="noResults" class="no-results" hidden>No drinks match your search.</p>
+    </main>
+
+    <div class="sip-border">
+        <div class="sip-row" aria-hidden="true">
+            <span>🍵</span><span>🫖</span><span>🥥</span><span>🥤</span><span>🧋</span><span>🧃</span><span>🍋</span><span>🍹</span><span>🧊</span><span>🍵</span><span>🥥</span><span>🥤</span>
+        </div>
+        <footer class="site-footer">
+            <p>IT 490: Team 1</p>
+            <p>This site uses <a href="https://www.thecocktaildb.com/" target="_blank" rel="noopener">TheCocktailDB</a> for cocktail data.</p>
+        </footer>
+    </div>
+
+    <script>
+        // fe only
+        const input = document.querySelector('.search input');
+        const items = document.querySelectorAll('.menu-item');
+        const empty = document.getElementById('noResults');
+        function filterMenu() {
+            const q = input.value.trim().toLowerCase();
+            let shown = 0;
+            items.forEach(li => {
+                const match = li.textContent.toLowerCase().includes(q);
+                li.hidden = !match;
+                if (match) shown++;
+            });
+            empty.hidden = shown > 0;
+        }
+        input.addEventListener('input', filterMenu);
+        input.value = new URLSearchParams(location.search).get('q') || '';
+        filterMenu();
+    </script>
+</body>
+</html>
