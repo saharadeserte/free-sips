@@ -1,0 +1,16 @@
+[Unit]
+Description=IT490 Cocktail Backend
+After=network.target
+
+[Service]
+Type=simple
+User=awdharry
+WorkingDirectory=/home/awdharry/Capstone-Group-01/milestone2/backend/CocktailBackend
+ExecStart=/usr/bin/dotnet run --no-launch-profile --project /home/awdharry/Capstone-Group-01/milestone2/backend/CocktailBackend/CocktailBackend.csproj
+Environment=ASPNETCORE_ENVIRONMENT=Development
+Environment=RABBITMQ_HOST=100.100.36.22
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
