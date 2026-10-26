@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register | FreeSpirit Sips</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <header class="topbar">
+        <a class="brand" href="/">🍵 FreeSpirit Sips</a>
+    </header>
+
+    <main>
+        <h1>Create account</h1>
+        <p class="tagline">Join FreeSpirit Sips.</p>
+
+        <section class="auth-card">
+            <form id="registerForm" novalidate>
+                <label for="username">Username</label>
+                <input id="username" name="username" type="text" autocomplete="username" required>
+
+                <label for="email">Email</label>
+                <input id="email" name="email" type="email" autocomplete="email" required>
+
+                <label for="password">Password <span class="hint">(8+ characters)</span></label>
+                <input id="password" name="password" type="password" autocomplete="new-password" required>
+
+                <label for="confirm">Confirm password</label>
+                <input id="confirm" name="confirm" type="password" autocomplete="new-password" required>
+
+                <button id="submitBtn" class="btn-primary" type="submit">Register</button>
+            </form>
+            <p id="message" class="form-message" hidden></p>
+            <p class="auth-switch">Already have an account? <a href="/login">Log in</a></p>
+        </section>
+    </main>
+
+    <script src="/auth.js"></script>
+    <script>
+        const form = document.getElementById('registerForm');
+        const msg = document.getElementById('message');
+        const btn = document.getElementById('submitBtn');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const confirm = document.getElementById('confirm').value;
+
+            if (!username || !email || !password) return setMessage(msg, 'All fields are required.', false);
+            if (password.length < 8) return setMessage(msg, 'Password must be at least 8 characters.', false);
+            if (password !== confirm) return setMessage(msg, 'Passwords do not match.', false);
+
+            btn.disabled = true;
+            const data = await postJSON('/api/register', { username, email, password });
+            btn.disabled = false;
+
+            if (data.success) {
+                setMessage(msg, 'Account created! Redirecting to log in...', true);
+                setTimeout(() => location.href = '/login', 1500);
+            } else {
+                setMessage(msg, data.error || 'Registration failed.', false);
+            }
+        });
+    </script>
+</body>
+</html>

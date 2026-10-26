@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home | FreeSpirit Sips</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <header class="topbar">
+        <a class="brand" href="/landing">🍵 FreeSpirit Sips</a>
+        <button id="logoutBtn" class="dash-btn" type="button">Log out</button>
+    </header>
+
+    <main>
+        <span class="badge">Signed in</span>
+        <h1 id="welcome">Welcome!</h1>
+        <p class="tagline">You are logged in to FreeSpirit Sips.</p>
+
+        <section class="info-card">
+            <h2>About</h2>
+            <p>FreeSpirit Sips is a drink-menu site. Drink browsing is coming in a later milestone.</p>
+        </section>
+    </main>
+
+    <script src="/auth.js"></script>
+    <script>
+        (async () => {
+            const res = await fetch('/api/me');
+            if (!res.ok) return location.replace('/login');
+            const { user } = await res.json();
+            document.getElementById('welcome').textContent = `Welcome, ${user.username}!`;
+        })();
+
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            await postJSON('/api/logout', {});
+            location.href = '/login';
+        });
+    </script>
+</body>
+</html>

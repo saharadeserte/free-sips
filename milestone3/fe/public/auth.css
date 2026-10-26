@@ -1,0 +1,57 @@
+/* Auth forms + status pill. Uses variables from styles.css */
+.auth-card {
+    max-width: 420px;
+    margin: 24px auto 0;
+    background: var(--cream);
+    border: 2px solid var(--rose);
+    border-radius: 20px;
+    padding: 24px;
+}
+.auth-card h1 { font-size: 2rem; }
+.auth-card .sub { color: var(--mauve); margin: 0 0 18px; }
+.field { display: block; margin-bottom: 14px; }
+.field span { display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 4px; }
+.field small { display: block; color: var(--mauve); font-size: 0.8rem; margin-top: 3px; }
+.field input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--rose);
+    border-radius: 10px;
+    background: var(--white);
+    color: var(--deep);
+    font: inherit;
+}
+.field input:focus-visible { outline: 3px solid var(--orange); outline-offset: 1px; }
+.btn-primary {
+    width: 100%;
+    background: var(--deep);
+    color: var(--blush);
+    border: none;
+    border-radius: 9999px;
+    padding: 11px 16px;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+.btn-primary:hover { background: var(--mauve); }
+.btn-primary:disabled { opacity: 0.6; cursor: wait; }
+.btn-primary:focus-visible { outline: 3px solid var(--orange); outline-offset: 2px; }
+.form-msg { min-height: 1.4em; margin: 12px 0 0; font-size: 0.9rem; }
+.form-msg.error { color: #a1182b; }
+.form-msg.ok { color: #1d6b3a; }
+.form-msg.info { color: var(--mauve); }
+.alt-link { text-align: center; margin: 16px 0 0; font-size: 0.9rem; }
+.alt-link a { color: var(--mauve); }
+
+.status-pill {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 9999px;
+    font-size: 0.85rem;
+    margin-left: 8px;
+    border: 1px solid var(--deep);
+}
+.status-pill.up { background: #d9f2e1; color: #14532d; }
+.status-pill.down { background: #fddada; color: #7f1d1d; }
+span.dash-btn { cursor: default; }
+span.dash-btn:hover { background: transparent; }

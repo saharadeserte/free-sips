@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home | FreeSpirit Sips</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="auth.css">
+</head>
+<body>
+    <header class="topbar" id="top">
+        <a class="brand" href="index.html">🍵 FreeSpirit Sips</a>
+        <nav class="dash" aria-label="Main">
+            <a class="dash-btn" href="index.html" aria-current="page">🏠 Home</a>
+            <a class="dash-btn" href="menu.html">🍽️ Menu</a>
+            <a class="dash-btn" href="index.html#info">ℹ️ Information</a>
+        </nav>
+        <form class="search" action="menu.html" method="get" role="search">
+            <input type="search" name="q" placeholder="Search drinks..." aria-label="Search drinks">
+            <button type="submit">Search</button>
+        </form>
+    </header>
+
+    <main>
+        <span class="badge">Web server online</span><span id="rmqStatus" class="status-pill down">Messaging: checking...</span>
+        <h1>FreeSpirit Sips</h1>
+        <p class="tagline" id="welcome">Welcome to FreeSpirit Sips</p>
+
+        <section class="info-card" id="info">
+            <h2>About</h2>
+            <p>FreeSpirit Sips is a recipe helper for finding drinks.</p>
+            <p>Browse our menu or use the search bar to look up a drink!</p>
+        </section>
+
+        <div class="card-small">
+            <h3>Logging check</h3>
+            <p>Send a test message to the <code>q_central_logging</code> queue.</p>
+            <select id="logLevel" aria-label="Log level">
+                <option>INFO</option><option>DEBUG</option><option>WARNING</option><option>ERROR</option>
+            </select>
+            <button id="sendLogBtn" class="btn-orange" type="button">Send test log</button>
+            <div id="output" class="log-box" role="status">Awaiting trigger...</div>
+        </div>
+    </main>
+
+    <div class="sip-border">
+        <div class="sip-row" aria-hidden="true">
+            <span>🍵</span><span>🫖</span><span>🥥</span><span>🥤</span><span>🧋</span><span>🧃</span><span>🍋</span><span>🍹</span><span>🧊</span><span>🍵</span><span>🥥</span><span>🥤</span>
+        </div>
+        <footer class="site-footer"><p>IT 490: Team 1</p></footer>
+    </div>
+
+    <script src="auth.js"></script>
+    <script>
+        document.getElementById('sendLogBtn').addEventListener('click', async () => {
+            const out = document.getElementById('output');
+            const level = document.getElementById('logLevel').value;
+            out.textContent = 'Publishing to RabbitMQ...';
+            try {
+                const res = await fetch('/api/log', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ level, message: 'Frontend heartbeat from landing page' })
+                });
+                const data = await res.json();
+                out.textContent = data.success
+                    ? `[SUCCESS] ${level} log published at ${new Date().toLocaleTimeString()}`
+                    : `[ERROR] ${data.error}`;
+            } catch (err) { out.textContent = `[FETCH ERROR] ${err.message}`; }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log In | FreeSpirit Sips</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <header class="topbar">
+        <a class="brand" href="/">🍵 FreeSpirit Sips</a>
+    </header>
+
+    <main>
+        <h1>Log in</h1>
+        <p class="tagline">Welcome back.</p>
+
+        <section class="auth-card">
+            <form id="loginForm" novalidate>
+                <label for="username">Username</label>
+                <input id="username" name="username" type="text" autocomplete="username" required>
+
+                <label for="password">Password</label>
+                <input id="password" name="password" type="password" autocomplete="current-password" required>
+
+                <button id="submitBtn" class="btn-primary" type="submit">Log in</button>
+            </form>
+            <p id="message" class="form-message" hidden></p>
+            <p class="auth-switch">New here? <a href="/register">Create an account</a></p>
+        </section>
+    </main>
+
+    <script src="/auth.js"></script>
+    <script>
+        const form = document.getElementById('loginForm');
+        const msg = document.getElementById('message');
+        const btn = document.getElementById('submitBtn');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+
+            if (!username || !password) return setMessage(msg, 'Please enter your username and password.', false);
+
+            btn.disabled = true;
+            const data = await postJSON('/api/login', { username, password });
+            btn.disabled = false;
+
+            if (data.success) {
+                location.href = '/landing';
+            } else {
+                setMessage(msg, data.error || 'Login failed.', false);
+            }
+        });
+    </script>
+</body>
+</html>
