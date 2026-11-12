@@ -1,0 +1,20 @@
+{
+  "scripts": {
+    "start": [
+      "Composer\\Config::disableProcessTimeout",
+      "./start_fe.sh"
+    ],
+    "start-all": [
+      "Composer\\Config::disableProcessTimeout",
+      "./compose.sh start"
+    ],
+    "stop-all": [
+      "Composer\\Config::disableProcessTimeout",
+      "./compose.sh stop"
+    ],
+    "status": [
+      "Composer\\Config::disableProcessTimeout",
+      "./compose.sh status"
+    ]
+  }
+}
