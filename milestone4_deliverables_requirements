@@ -1,0 +1,58 @@
+Milestone 4 Deliverables Requirements
+Multi-Tiered Cluster
+ Requirement:
+
+Your work will be reviewed in-class:
+
+Database (3 nodes): Shift from a single db instance to a db cluster. There are lots of examples onlineLinks to an external site. so feel free to explore. For now, the number of instances can be statically configured.
+Database ClusteringLinks to an external site.
+Messaging (3 nodes): Shift from a single RabbitMQ instance to a RabbitMQ cluster. Once again, there are lots of examples onlineLinks to an external site.. For now, the number of instances can be statically configured.
+RabbitMQ Clustering GuideLinks to an external site.
+Front End (2 nodes): Explore what changes would be needed to move to a production environment. If you are using Flask, this probably means you will want to read up on GunicornLinks to an external site.. If you are using PHP you may be there already, but you should research.
+Back End (2 nodes): Provide support to the other group members. Most of the back end heavy lifting has already occurred.
+Each additional cluster node should be installed onto your group members' existing component or create a new component.
+
+ Guideline:
+
+There should be one document submission per group that includes:
+
+Cover Page with all students' name and their contribution to this milestone
+Images of any code
+Images of Project Management
+Images of the working system
+Video of the working system
+provide the registration flow
+provide the login flow
+shutdown two services of choice
+display status before and after shutting down
+use Composer Script to turn on services
+display status after running the Composer Script
+Team Meeting Minutes
+
+
+IT490 Milestone 4 
+
+- Database (3 nodes/points of failure)
+- Msging (3 nodes)
+- Frontend (2 nodes):
+- Backend (2 nodes): 2 Nodes for BE-FE & 2 nodes for BE-DB
+
+Nodes Specification:
+If any one of the VMs were to fail, what happens to another's service? It wont work, so failure points should be made in Milestone 4.
+- Have minimum 3 nodes/points of failure for DB, Msg/RMQ and 2 nodes for FE and BE
+- Each extra node should not be on the same system/machine. 
+    - Ex. If DB has one node, the other 2 nodes should not be on that machine, has to be somewhere else. Pick and choose where to allocate nodes.
+-        No matter where the nodes are, the DB is responsible for those nodes, aka someone else hosting DB's nodes is not responsible for them.
+    - Does not have to be on the same VM or it could. A separate VM can be made and non-master nodes can be used on that. 
+- The VM/system/master-node itself counts as a node but the dependency on that master-node requires the building of failure points
+
+- Composer Script Specs: "Your VM is a datacenter where it can shut down all or a few nodes."
+    - The script needs to cater towards the environment aka nodes (needs to know where the nodes are, etc.)
+
+**The nodes physically have to be on different VMs, not just 1 computer and 2 VMs  || Second node/non-master node should not be on the same system/VM
+
+Additional features are to be expected but that depends on the bandwidth/viability of each group's progress
+
+- If you are hosting DB master nodes, you should not be hosting on your machine and the cloud (?)
+
+FrontEnd can use Angular(Prof says he doesn't know it was successful?), Flask, Gunicorn
