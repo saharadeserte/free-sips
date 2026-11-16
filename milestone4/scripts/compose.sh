@@ -18,7 +18,7 @@ case "$ACTION" in
     *) echo "Usage: $0 start|stop|status [service ...]"; exit 1 ;;
 esac
 
-ORDER=(rabbitmq database be-db be-fe frontend)   # stop runs this in reverse
+ORDER=(rabbitmq database be-db be-fe frontend frontend2)   # stop runs this in reverse
 REPO="Capstone-Group-01/milestone4"              # relative to each user's $HOME
 WAIT_SECS="${WAIT_SECS:-60}"
 
@@ -60,6 +60,11 @@ define be-fe     befe       100.79.8.94    22  "$REPO" \
     "curl -fs --max-time 2 http://localhost:5000/ >/dev/null"
 
 define frontend  frontend   100.82.21.127  22    "$REPO" \
+    "bash scripts/start_fe.sh" \
+    "fuser -k 7812/tcp 2>/dev/null || true" \
+    "curl -fs --max-time 2 http://localhost:7812/raw >/dev/null"
+
+define frontend2 jja        100.73.110.84  22    "$REPO" \
     "bash scripts/start_fe.sh" \
     "fuser -k 7812/tcp 2>/dev/null || true" \
     "curl -fs --max-time 2 http://localhost:7812/raw >/dev/null"

@@ -1,5 +1,19 @@
 require('dotenv').config();
 
+function requiredEnv(name) {
+  const val = process.env[name];
+  if (!val || !val.trim()) {
+    throw new Error(`Missing required environment variable: ${name}`);
+  }
+  return val.trim();
+}
+
+const RMQ_HOSTS = requiredEnv('RMQ_HOSTS').split(',').map(h => h.trim()).filter(Boolean);
+const RMQ_PORT = process.env.RMQ_PORT || '5672';
+const RMQ_USER = requiredEnv('RMQ_USER');
+const RMQ_PASSWORD = requiredEnv('RMQ_PASSWORD');
+const RMQ_VHOST = process.env.RMQ_VHOST || 'messenger';
+
 const express = require('express');
 const amqp = require('amqplib');
 const path = require('path');
@@ -38,6 +52,11 @@ const RPC_TIMEOUT_MS = 8000;
 const COOKIE_NAME = 'fs_session';
 
 app.use(express.json());
+const os = require('os');
+app.use((req, res, next) => {
+    res.setHeader('X-Served-By', os.hostname());
+    next();
+});
 app.use(express.static(path.join(__dirname, 'public'), { index: false }));
 
 process.on('unhandledRejection', (reason) => console.error('[!] Async rejection:', reason));
