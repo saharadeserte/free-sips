@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS drinks (
     thumb_url     VARCHAR(255) NULL,
     source        ENUM('cocktaildb','user') NOT NULL DEFAULT 'cocktaildb',
     status        ENUM('published','pending','rejected') NOT NULL DEFAULT 'published',
-    created_by    INT NULL,                       -- users.user_id for user recipes
+    created_by    BIGINT UNSIGNED NULL,                       -- users.user_id for user recipes
     created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (drink_id),
@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS drink_ingredients (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS pantry_items (
-    user_id       INT NOT NULL,
+    user_id       BIGINT UNSIGNED NOT NULL,
     ingredient_id INT UNSIGNED NOT NULL,
     quantity      VARCHAR(40) NULL,
     added_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -60,7 +60,7 @@ CREATE TABLE IF NOT EXISTS pantry_items (
 CREATE TABLE IF NOT EXISTS reviews (
     review_id  INT UNSIGNED NOT NULL AUTO_INCREMENT,
     drink_id   INT UNSIGNED NOT NULL,
-    user_id    INT NOT NULL,
+    user_id    BIGINT UNSIGNED NOT NULL,
     rating     TINYINT UNSIGNED NOT NULL,
     comment    VARCHAR(1000) NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

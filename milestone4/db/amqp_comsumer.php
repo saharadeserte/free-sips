@@ -54,33 +54,11 @@ $dbConfig = [
 
 function routeDatabaseAction(PDO $pdo, array $req): array
 {
-    $action = (string) ($req['action'] ?? '');
-
-    return match ($action) {
-        // Auth & Session actions (handled in users_auth.php)
-        'register',
-        'login',
-        'login_result',
-        'update_password_hash' => processRequest($pdo, $req),
-        'session_create'       => createSession($pdo, $req),
-        'session_validate'     => validateSession($pdo, $req),
-        'session_delete'       => deleteSession($pdo, $req),
-
-        // Drinks, Ingestion, Pantry, Recipes & Reviews (handled in drinks_api.php)
-        'upsert_drink',
-        'list_drinks',
-        'get_drink',
-        'list_categories',
-        'pantry_list',
-        'pantry_add',
-        'pantry_update',
-        'pantry_remove',
-        'match_recipes',
-        'submit_recipe',
-        'submit_review',
-        'delete_review'        => handleDrinksAction($pdo, $req),
-
-        default                => ['success' => false, 'error' => 'unknown_action'],
+    return match ((string)($req['action'] ?? '')) {
+        'session_create'   => createSession($pdo, $req),
+        'session_validate' => validateSession($pdo, $req),
+        'session_delete'   => deleteSession($pdo, $req),
+        default            => processRequest($pdo, $req),   // auth + drinks, falls back to unknown_action
     };
 }
 
@@ -297,5 +275,8 @@ final class AuthDbWorker
         $this->connection = null;
     }
 }
-
+function handleDrinksAction(PDO $pdo, array $req): array
+{
+    return processDrinkRequest($pdo, $req) ?? ['success' => false, 'error' => 'unknown_action'];
+}
 (new AuthDbWorker($rmqConfig, $dbConfig))->run();

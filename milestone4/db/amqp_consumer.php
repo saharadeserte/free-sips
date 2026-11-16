@@ -58,14 +58,14 @@ final class CentralLogWorker
 {
     private const MAX_BACKOFF_SECONDS = 30;
 
-    // Adjust these IDs if your log_levels / log_sources lookup tables use different keys
+    // Matches the rows already in log_levels (10..50) and log_sources (1..5)
     private const LEVEL_MAP = [
-        'DEBUG'    => 1,
-        'INFO'     => 2,
-        'WARNING'  => 3,
-        'WARN'     => 3,
-        'ERROR'    => 4,
-        'CRITICAL' => 5,
+        'DEBUG'    => 10,
+        'INFO'     => 20,
+        'WARNING'  => 30,
+        'WARN'     => 30,
+        'ERROR'    => 40,
+        'CRITICAL' => 50,
     ];
 
     private const SOURCE_MAP = [
@@ -172,14 +172,15 @@ final class CentralLogWorker
     {
         $rawBody = $msg->getBody();
         $data = json_decode($rawBody, true);
-        if (!is_array($data)) {
+        $isJson = is_array($data);
+        if (!$isJson) {
             $data = ['message' => $rawBody];
         }
 
         $levelName   = strtoupper(trim((string) ($data['level'] ?? 'INFO')));
         $serviceName = strtolower(trim((string) ($data['service'] ?? 'frontend')));
 
-        $levelId  = self::LEVEL_MAP[$levelName] ?? 2;
+        $levelId  = self::LEVEL_MAP[$levelName] ?? 20;
         $sourceId = self::SOURCE_MAP[$serviceName] ?? 1;
 
         $eventUuid     = isset($data['event_uuid']) && strlen((string) $data['event_uuid']) === 36
@@ -189,6 +190,8 @@ final class CentralLogWorker
         $message       = (string) ($data['message'] ?? $rawBody);
         $correlationId = isset($data['correlation_id']) ? substr((string) $data['correlation_id'], 0, 64) : null;
         $loggedAt      = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('Y-m-d H:i:s.v');
+        // sys_logs.context has a JSON_VALID check, so only store real JSON
+        $context       = $isJson ? $rawBody : null;
 
         try {
             $this->ensureDatabase();
@@ -202,14 +205,16 @@ final class CentralLogWorker
                 ':source_id' => $sourceId,
                 ':host'      => $host,
                 ':message'   => $message,
-                ':context'   => $rawBody,
+                ':context'   => $context,
                 ':corr_id'   => $correlationId,
                 ':logged_at' => $loggedAt,
             ]);
             $msg->ack();
         } catch (Throwable $e) {
             error_log('Failed to write log to sys_logs: ' . $e->getMessage());
-            $msg->nack(false, true);
+            // Requeue once, then drop, so one bad message cannot loop forever
+            $redelivered = (bool) ($msg->delivery_info['redelivered'] ?? false);
+            $msg->nack(false, !$redelivered);
         }
     }
 
