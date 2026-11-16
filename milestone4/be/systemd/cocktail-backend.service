@@ -1,0 +1,15 @@
+[Unit]
+Description=CocktailBackend BE-FE Worker
+After=network.target
+
+[Service]
+Type=simple
+User=befe
+WorkingDirectory=/home/befe/Capstone-Group-01/milestone4/be/CocktailBackend
+EnvironmentFile=-/etc/default/cocktail-backend
+ExecStart=/usr/bin/dotnet run --no-launch-profile
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

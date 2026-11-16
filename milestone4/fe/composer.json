@@ -1,0 +1,10 @@
+{
+  "scripts": {
+    "start": [
+      "Composer\\Config::disableProcessTimeout",
+      "bash ../scripts/start_fe.sh"
+    ],
+    "start-all": "bash ../scripts/compose.sh start",
+    "stop-all": "bash ../scripts/compose.sh stop"
+  }
+}
