@@ -52,7 +52,7 @@ define database  it490sfc   100.123.138.94 22    "$REPO" \
 define be-db     pablob123  100.127.68.78  22    "$REPO" \
     "bash scripts/start_be-db.sh" \
     "pkill -x dotnet || true" \
-    "pgrep -f '[d]otnet run' >/dev/null"
+    "curl -fs --max-time 2 http://localhost:5000/ >/dev/null"
 
 define be-fe     befe       100.79.8.94    22  "$REPO" \
     "bash scripts/start_be-fe.sh" \

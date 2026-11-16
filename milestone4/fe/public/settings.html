@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Settings | FreeSpirit Sips</title>
+    <link rel="stylesheet" href="/styles.css">
+    <style>
+        .theme-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 10px;
+            margin-top: 12px;
+        }
+        .theme-btn {
+            padding: 12px;
+            border-radius: 14px;
+            border: 2px solid var(--rose);
+            background: var(--white);
+            color: var(--deep);
+            font: inherit;
+            font-weight: 700;
+            cursor: pointer;
+            text-align: center;
+        }
+        .theme-btn.active {
+            border-color: var(--orange);
+            outline: 3px solid var(--orange);
+        }
+    </style>
+</head>
+<body>
+    <header class="topbar"></header>
+    <main>
+        <h1>⚙️ Settings</h1>
+        <p class="tagline">Customize your FreeSpirit Sips theme and update your account credentials.</p>
+
+        <section class="auth-card" style="max-width:540px;">
+            <h2>Site Theme</h2>
+            <p class="hint">Saved automatically on this browser.</p>
+            <div class="theme-grid" id="themeGrid">
+                <button type="button" class="theme-btn" data-theme="default">🌸 Classic Blush</button>
+                <button type="button" class="theme-btn" data-theme="matcha">🍵 Matcha Garden</button>
+                <button type="button" class="theme-btn" data-theme="midnight">🌙 Midnight Lounge</button>
+                <button type="button" class="theme-btn" data-theme="sunset">🍊 Sunset Citrus</button>
+            </div>
+        </section>
+
+        <section class="auth-card" style="max-width:540px;">
+            <h2>Account Credentials</h2>
+            <form id="settingsForm" novalidate>
+                <label for="newUsername">New Username <span class="hint">(leave blank to keep current)</span></label>
+                <input id="newUsername" type="text" maxlength="50" autocomplete="username">
+
+                <label for="newPassword">New Password <span class="hint">(8+ chars, leave blank to keep current)</span></label>
+                <input id="newPassword" type="password" autocomplete="new-password">
+
+                <label for="currentPassword">Current Password <span class="hint">(required to save changes)</span></label>
+                <input id="currentPassword" type="password" autocomplete="current-password" required>
+
+                <button id="saveBtn" type="submit" class="btn-primary">Save Account Changes</button>
+            </form>
+            <p id="settingsMsg" class="form-message" hidden></p>
+        </section>
+    </main>
+    <div class="sip-border"></div>
+
+    <script src="/site.js"></script>
+    <script>
+        const themeBtns = document.querySelectorAll('.theme-btn');
+        function syncThemeButtons() {
+            const cur = window.getSavedTheme ? window.getSavedTheme() : 'default';
+            themeBtns.forEach((b) => b.classList.toggle('active', b.dataset.theme === cur));
+        }
+        themeBtns.forEach((btn) => {
+            btn.addEventListener('click', () => {
+                window.applyTheme(btn.dataset.theme);
+                syncThemeButtons();
+            });
+        });
+        syncThemeButtons();
+
+        window.addEventListener('fs:auth', (e) => {
+            if (e.detail.user) {
+                document.getElementById('newUsername').placeholder = e.detail.user.username;
+            }
+        });
+
+        const form = document.getElementById('settingsForm');
+        const msg = document.getElementById('settingsMsg');
+        const saveBtn = document.getElementById('saveBtn');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            msg.hidden = true;
+
+            const new_username = document.getElementById('newUsername').value.trim();
+            const new_password = document.getElementById('newPassword').value;
+            const current_password = document.getElementById('currentPassword').value;
+
+            if (!current_password) {
+                msg.textContent = 'Please enter your current password.';
+                msg.className = 'form-message err';
+                msg.hidden = false;
+                return;
+            }
+
+            saveBtn.disabled = true;
+            try {
+                const res = await fetch('/api/account/settings', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ current_password, new_username, new_password })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    msg.textContent = data.message || 'Account updated successfully!';
+                    msg.className = 'form-message ok';
+                    msg.hidden = false;
+                    document.getElementById('currentPassword').value = '';
+                    document.getElementById('newPassword').value = '';
+                    setTimeout(() => window.location.reload(), 900);
+                } else {
+                    msg.textContent = data.error || 'Could not update account.';
+                    msg.className = 'form-message err';
+                    msg.hidden = false;
+                }
+            } catch {
+                msg.textContent = 'Server error. Please try again.';
+                msg.className = 'form-message err';
+                msg.hidden = false;
+            } finally {
+                saveBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

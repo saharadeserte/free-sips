@@ -36,18 +36,23 @@ public class AuthService
             var root = doc.RootElement;
             var action = GetString(root, "action");
 
-            if (action is "register" or "login" or "validate" or "logout")
+            if (action is "register" or "login" or "validate" or "logout" or "update_account")
             {
                 return action switch
                 {
-                    "register" => await RegisterAsync(root),
-                    "login"    => await LoginAsync(root),
-                    "validate" => await ValidateAsync(root),
-                    _          => await LogoutAsync(root),
+                    "register"       => await RegisterAsync(root),
+                    "login"          => await LoginAsync(root),
+                    "validate"       => await ValidateAsync(root),
+                    "update_account" => await UpdateAccountAsync(root),
+                    _                => await LogoutAsync(root),
                 };
             }
 
-            var session = await GetSessionAsync(GetString(root, "token"));
+            // Skip session RPC for purely public read actions (autocomplete & random slideshow)
+            Session? session = DrinkService.SkipsSessionLookup(action)
+                ? null
+                : await GetSessionAsync(GetString(root, "token"));
+
             return await _drinks.HandleAsync(action, root, session) ?? Error("Unknown action.");
         }
         catch (JsonException)
@@ -56,10 +61,57 @@ public class AuthService
         }
         catch (Exception ex)
         {
-            // Log the exception type only. The message or payload may contain secrets.
             Console.WriteLine($"[auth] Processing error: {ex.GetType().Name}");
             return Error("authentication_unavailable");
         }
+    }
+
+    private async Task<string> UpdateAccountAsync(JsonElement root)
+    {
+        var session = await GetSessionAsync(GetString(root, "token"));
+        if (session is null)
+            return Error("not_logged_in");
+
+        var currentPassword = GetString(root, "current_password") ?? "";
+        var newUsername = (GetString(root, "new_username") ?? "").Trim();
+        var newPassword = GetString(root, "new_password") ?? "";
+
+        if (string.IsNullOrEmpty(currentPassword))
+            return Error("Please enter your current password to confirm changes.");
+
+        if (string.IsNullOrEmpty(newUsername) && string.IsNullOrEmpty(newPassword))
+            return Error("Enter a new username or a new password.");
+
+        if (!string.IsNullOrEmpty(newPassword) && newPassword.Length < 8)
+            return Error("New password must be at least 8 characters.");
+
+        using var dbDoc = JsonDocument.Parse(await _userStore.LookupUserAsync(session.Username));
+        var db = dbDoc.RootElement;
+        if (!IsSuccess(db) || !db.TryGetProperty("user", out var dbUser) ||
+            !dbUser.TryGetProperty("password_hash", out var hashEl) || hashEl.ValueKind != JsonValueKind.String)
+        {
+            return Error("Could not verify account.");
+        }
+
+        if (!BCrypt.Net.BCrypt.Verify(currentPassword, hashEl.GetString()!))
+            return Error("Current password is incorrect.");
+
+        var payload = new Dictionary<string, object?>
+        {
+            ["action"] = "update_account",
+            ["user_id"] = session.UserId
+        };
+
+        if (!string.IsNullOrEmpty(newUsername) && newUsername != session.Username)
+            payload["new_username"] = newUsername;
+
+        if (!string.IsNullOrEmpty(newPassword))
+            payload["new_password_hash"] = BCrypt.Net.BCrypt.HashPassword(newPassword, workFactor: 12);
+
+        if (!payload.ContainsKey("new_username") && !payload.ContainsKey("new_password_hash"))
+            return JsonSerializer.Serialize(new { success = true, username = session.Username, message = "No changes needed." });
+
+        return await _userStore.CallAsync(payload);
     }
 
     private async Task<string> RegisterAsync(JsonElement root)
@@ -74,7 +126,6 @@ public class AuthService
         if (password.Length < 8)
             return Error("Password must be at least 8 characters.");
 
-        // Hash before the password leaves this process
         var hash = BCrypt.Net.BCrypt.HashPassword(password, workFactor: 12);
 
         using var dbDoc = JsonDocument.Parse(await _userStore.RegisterUserAsync(username, email, hash));
@@ -103,13 +154,11 @@ public class AuthService
 
         if (!IsSuccess(db))
         {
-            // Report a timeout as a timeout, not as a wrong password
             if (ErrorText(db, "") == "database_timeout")
                 return Error("database_timeout");
             return Error(InvalidLogin);
         }
 
-        // The database nests the account under "user"
         if (!db.TryGetProperty("user", out var dbUser) || dbUser.ValueKind != JsonValueKind.Object)
             return Error("authentication_unavailable");
 
@@ -119,7 +168,6 @@ public class AuthService
         if (!dbUser.TryGetProperty("password_hash", out var hashEl) || hashEl.ValueKind != JsonValueKind.String ||
             !dbUser.TryGetProperty("user_id", out var idEl) || idEl.ValueKind != JsonValueKind.Number)
         {
-            // Field names only, never values
             Console.WriteLine("[auth] DB login reply missing fields. Got: " +
                 string.Join(", ", dbUser.EnumerateObject().Select(p => p.Name)));
             return Error("authentication_unavailable");
@@ -129,7 +177,6 @@ public class AuthService
         var userId = idEl.GetInt32();
         var isValid = BCrypt.Net.BCrypt.Verify(password, storedHash);
 
-        // Recording the attempt must never block the login itself
         _ = _userStore.SendLoginResultAsync(userId, isValid);
 
         if (!isValid)
@@ -139,7 +186,6 @@ public class AuthService
             ? u.GetString()!
             : username;
 
-        // 32 random bytes, hex-encoded so the token is safe in a cookie
         var tokenBytes = new byte[32];
         RandomNumberGenerator.Fill(tokenBytes);
         var sessionToken = Convert.ToHexString(tokenBytes);
@@ -156,8 +202,6 @@ public class AuthService
         });
     }
 
-    // A reply with success=false and no error field means "not logged in".
-    // server.js relies on that to tell a logged-out user apart from a backend failure.
     private async Task<string> ValidateAsync(JsonElement root)
     {
         var token = GetString(root, "token");

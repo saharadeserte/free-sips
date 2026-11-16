@@ -7,25 +7,9 @@
     <title>FreeSpirit Sips</title>
     <link rel="stylesheet" href="/styles.css">
     <style>
-        .auth-area {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-
-        .auth-area a,
-        .auth-area button {
-            text-decoration: none;
-        }
-
-        .auth-area .user {
-            color: var(--blush);
-            font-size: 0.9rem;
-        }
-
         .hero {
             text-align: center;
-            padding: 8px 0 0;
+            padding: 6px 0 4px;
         }
 
         .hero p {
@@ -34,13 +18,14 @@
             margin: 8px auto 0;
         }
 
+        /* Spec 3b: Uniform slideshow with dark overlay & clickable drinks */
         .slideshow {
             position: relative;
-            height: 210px;
+            height: 290px;
             margin-top: 20px;
-            border-radius: 20px;
-            background: var(--cream);
-            border: 2px solid var(--rose);
+            border-radius: 22px;
+            background: var(--deep);
+            border: 3px solid var(--rose);
             overflow: hidden;
         }
 
@@ -48,32 +33,48 @@
             position: absolute;
             inset: 0;
             display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 16px;
+            text-decoration: none;
+            color: #fff;
         }
 
         .slide.active {
+            display: block;
+            animation: fade 0.5s ease;
+        }
+
+        .slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .slide-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(20, 8, 28, 0.88) 0%, rgba(20, 8, 28, 0.35) 55%, rgba(20, 8, 28, 0.15) 100%);
             display: flex;
-            animation: fade 0.6s ease;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            text-align: center;
+            padding: 22px 20px;
         }
 
-        .slide .emoji {
-            font-size: 3.2rem;
-        }
-
-        .slide h3 {
-            margin: 6px 0 4px;
+        .slide-overlay h3 {
+            margin: 0 0 4px;
             font-family: Georgia, serif;
-            color: var(--deep);
+            font-size: 1.65rem;
+            color: #ffffff;
+            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
         }
 
-        .slide p {
-            margin: 0;
-            color: var(--mauve);
-            font-size: 0.95rem;
+        .slide-overlay span {
+            font-size: 0.9rem;
+            color: #ffdede;
+            background: rgba(0, 0, 0, 0.45);
+            padding: 3px 12px;
+            border-radius: 9999px;
         }
 
         .slide-controls {
@@ -93,17 +94,26 @@
         }
 
         @keyframes fade {
-            from {
-                opacity: 0;
-            }
-
-            to {
-                opacity: 1;
-            }
+            from { opacity: 0.2; }
+            to { opacity: 1; }
         }
 
         .section {
             margin-top: 28px;
+        }
+
+        .section-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .section-head a {
+            color: var(--deep);
+            font-weight: 700;
+            font-size: 0.95rem;
         }
 
         .tabs {
@@ -118,14 +128,16 @@
             color: var(--deep);
             border: 2px solid var(--rose);
             border-radius: 9999px;
-            padding: 6px 14px;
+            padding: 6px 16px;
             cursor: pointer;
             font: inherit;
+            font-weight: 600;
         }
 
         .tab[aria-selected="true"] {
             background: var(--deep);
             color: var(--blush);
+            border-color: var(--deep);
         }
 
         .drink-list {
@@ -138,16 +150,26 @@
             background: var(--cream);
             border: 2px solid var(--rose);
             border-radius: 14px;
-            padding: 10px 14px;
+            padding: 12px 16px;
             margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
         }
 
-        .drink-list strong {
+        .drink-list a {
             color: var(--deep);
+            font-weight: 700;
+            text-decoration: none;
+            font-size: 1.05rem;
+        }
+
+        .drink-list a:hover {
+            text-decoration: underline;
         }
 
         .drink-list span {
-            display: block;
             color: var(--mauve);
             font-size: 0.9rem;
         }
@@ -163,12 +185,19 @@
             margin: 12px 0;
         }
 
-        .pantry-form input {
+        .pantry-input-wrap {
             flex: 1;
-            padding: 8px 12px;
+            position: relative;
+        }
+
+        .pantry-input-wrap input {
+            width: 100%;
+            padding: 9px 14px;
             border-radius: 9999px;
             border: 1px solid var(--rose);
             font: inherit;
+            background: var(--white);
+            color: var(--deep);
         }
 
         .pantry-form button,
@@ -189,9 +218,17 @@
             cursor: not-allowed;
         }
 
+        /* Pantry workspace with draggable boxes & big trash can */
+        .pantry-workspace {
+            display: grid;
+            grid-template-columns: 1fr 110px;
+            gap: 14px;
+            align-items: stretch;
+        }
+
         .jar {
             position: relative;
-            height: 220px;
+            height: 230px;
             border: 3px solid var(--mauve);
             border-radius: 24px;
             background: var(--white);
@@ -204,31 +241,59 @@
             pointer-events: none;
         }
 
+        .trash-dropzone {
+            border: 3px dashed var(--rose);
+            border-radius: 24px;
+            background: var(--cream);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 10px;
+            user-select: none;
+            transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+        }
+
+        .trash-dropzone .trash-emoji {
+            font-size: 3.4rem;
+            line-height: 1;
+        }
+
+        .trash-dropzone span {
+            font-size: 0.78rem;
+            color: var(--mauve);
+            margin-top: 6px;
+            font-weight: 600;
+        }
+
+        .trash-dropzone.drag-over {
+            background: #fde8e8;
+            border-color: #c93b3b;
+            transform: scale(1.05);
+        }
+
         .word {
             position: absolute;
-            padding: 6px 10px;
+            padding: 7px 12px;
             background: var(--deep);
             color: var(--blush);
-            border-radius: 8px;
-            font-size: 0.85rem;
-            cursor: pointer;
+            border-radius: 10px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            cursor: grab;
             user-select: none;
-            animation: drift 6s ease-in-out infinite alternate;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.16);
+        }
+
+        .word:active {
+            cursor: grabbing;
         }
 
         .word.selected {
             background: var(--orange);
             color: var(--deep);
-        }
-
-        @keyframes drift {
-            from {
-                transform: translate(0, 0);
-            }
-
-            to {
-                transform: translate(14px, -12px);
-            }
+            outline: 2px solid var(--deep);
         }
 
         .surprise-row {
@@ -248,27 +313,24 @@
             margin-top: 14px;
         }
 
-        .surprise-result img {
-            max-width: 220px;
-            border-radius: 16px;
-            display: block;
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-
-            .word,
-            .slide.active {
-                animation: none !important;
+        @media (max-width: 560px) {
+            .pantry-workspace {
+                grid-template-columns: 1fr;
+            }
+            .trash-dropzone {
+                flex-direction: row;
+                gap: 10px;
+                padding: 12px;
+            }
+            .trash-dropzone .trash-emoji {
+                font-size: 2.2rem;
             }
         }
     </style>
 </head>
 
 <body>
-    <header class="topbar">
-        <a class="brand" href="/">🍵 FreeSpirit Sips</a>
-        <div class="auth-area" id="authArea"></div>
-    </header>
+    <header class="topbar"></header>
 
     <main>
         <section class="hero">
@@ -276,6 +338,7 @@
             <h1>FreeSpirit Sips</h1>
             <p>Our drinks are made to be sipped slowly, and every drink on this site is non-alcoholic. Browse the menu
                 below, add what is in your kitchen to the pantry jar, and let us surprise you with something new.</p>
+            <a class="cta-browse" href="/index">🍹 Browse Drinks</a>
         </section>
 
         <div class="slideshow" id="slideshow" aria-live="polite"></div>
@@ -285,7 +348,10 @@
         </div>
 
         <section class="section" id="menu">
-            <h2>Menu</h2>
+            <div class="section-head">
+                <h2>Featured Drinks</h2>
+                <a href="/index">View all drinks &rarr;</a>
+            </div>
             <div class="tabs" role="tablist" id="categoryTabs"></div>
             <ul class="drink-list" id="drinkList"></ul>
         </section>
@@ -294,47 +360,44 @@
             <h2>Pantry</h2>
             <p class="locked" id="pantryNote"></p>
             <form class="pantry-form" id="pantryForm" autocomplete="off">
-                <input type="text" id="pantryInput" maxlength="30" placeholder="e.g. lemon, mint, oat milk"
-                    aria-label="Add an ingredient">
+                <div class="pantry-input-wrap">
+                    <input type="text" id="pantryInput" maxlength="40" placeholder="e.g. lemon, mint, oat milk, yoghurt"
+                        aria-label="Add an ingredient">
+                </div>
                 <button type="submit" id="pantryAdd">Add</button>
             </form>
-            <div class="jar" id="jar" aria-label="Pantry jar. Click ingredients to select them."></div>
+            <div class="pantry-workspace">
+                <div class="jar" id="jar" aria-label="Pantry jar. Click ingredients to select or drag them to the trash can."></div>
+                <div class="trash-dropzone" id="trashCan" aria-label="Drag ingredient here to delete">
+                    <div class="trash-emoji" aria-hidden="true">🗑️</div>
+                    <span>Drag here to remove</span>
+                </div>
+            </div>
             <div class="surprise-row">
                 <button type="button" class="surprise-btn" id="surpriseBtn">Surprise me</button>
-                <span class="surprise-note" id="surpriseNote">Select ingredients in the jar to search with them. With
-                    none selected, you get a random non-alcoholic drink.</span>
+                <span class="surprise-note" id="surpriseNote">Click ingredients to select them, or drag them to the 🗑️ trash can to delete.</span>
             </div>
             <div class="surprise-result" id="surpriseResult" aria-live="polite"></div>
         </section>
 
         <section class="info-card" id="info">
             <h2>About</h2>
-            <p>FreeSpirit Sips is a drink-menu site built for IT 490. Every drink shown here is non-alcoholic. Browsing
-                and the surprise search are open to everyone. The pantry jar saves to your account on this device.</p>
+            <p>FreeSpirit Sips is a non-alcoholic beverage discovery platform. Browsing and search are open to everyone. Log in to save ingredients to your personal pantry jar or share your own drink recipes.</p>
         </section>
     </main>
 
-    <div class="sip-border">
-        <div class="sip-row" aria-hidden="true">
-            <span>🍵</span><span>🫖</span><span>🥥</span><span>🥤</span><span>🧋</span><span>🧃</span><span>🍋</span><span>🍹</span><span>🧊</span><span>🍵</span><span>🥥</span><span>🥤</span>
-        </div>
-        <footer class="site-footer">
-            <p>IT 490: Team 1</p>
-        </footer>
-    </div>
+    <div class="sip-border"></div>
 
+    <script src="/site.js"></script>
     <script>
-        // ---------- Helpers ----------
         const $ = (id) => document.getElementById(id);
 
-        // Keeps letters, numbers, spaces, hyphens and apostrophes. Trims and caps the length.
-        // Used on every user-typed value before it is stored, displayed, or sent to an API.
         function clean(value) {
             return String(value ?? '')
                 .replace(/[^\p{L}\p{N} '\-]/gu, '')
                 .replace(/\s+/g, ' ')
                 .trim()
-                .slice(0, 30);
+                .slice(0, 40);
         }
 
         function el(tag, props = {}, text = '') {
@@ -344,76 +407,63 @@
             return node;
         }
 
-        // ---------- State ----------
         let currentUser = null;
         let pantry = [];
+        const positions = new Map();
         const selected = new Set();
 
-        // ---------- Auth area (no redirects: anonymous visitors stay on the landing page) ----------
-        async function loadUser() {
-            try {
-                const res = await fetch('/api/me', { credentials: 'same-origin' });
-                if (res.ok) {
-                    const data = await res.json();
-                    currentUser = data.user;
-                }
-            } catch {
-                // Session check failed. Treat as logged out and keep the page usable.
-            }
-            renderAuth();
-            loadPantry();
-        }
+        window.addEventListener('fs:auth', (e) => {
+            currentUser = e.detail.user;
+            if (window.loadPantryApi) window.loadPantryApi();
+        });
 
-        function renderAuth() {
-            const area = $('authArea');
-            area.replaceChildren();
-            if (currentUser) {
-                area.append(
-                    el('span', { className: 'user' }, `Hi, ${clean(currentUser.username)}`),
-                    buildLogoutButton()
-                );
-            } else {
-                area.append(
-                    el('a', { className: 'dash-btn', href: '/login' }, 'Log in'),
-                    el('a', { className: 'dash-btn', href: '/register' }, 'Register')
-                );
-            }
-        }
-
-        function buildLogoutButton() {
-            const btn = el('button', { className: 'dash-btn', type: 'button' }, 'Log out');
-            btn.addEventListener('click', async () => {
-                await fetch('/api/logout', { method: 'POST', credentials: 'same-origin' });
-                currentUser = null;
-                selected.clear();
-                renderAuth();
-                loadPantry();
-            });
-            return btn;
-        }
-
-        // ---------- Slideshow ----------
-        const SLIDES = [
-            { emoji: '🍵', title: 'Ceremonial Matcha Latte', text: 'Stone-ground matcha whisked with oat milk.' },
-            { emoji: '🥥', title: 'Fresh Coconut Water', text: 'Chilled and served straight from the coconut.' },
-            { emoji: '🎃', title: 'Pumpkin Spice Coffee', text: 'Cold brew with pumpkin, cinnamon and nutmeg.' },
-            { emoji: '🧋', title: 'Taro Boba Milk Tea', text: 'Creamy taro with chewy tapioca pearls.' },
-            { emoji: '🥤', title: 'Lemon Ginger Soda', text: 'Sparkling water, fresh lemon and ginger syrup.' }
-        ];
+        // ---------- Slideshow (from /api/random-drinks) ----------
         let slideIndex = 0;
         const slideshow = $('slideshow');
-        SLIDES.forEach((s, i) => {
-            const slide = el('div', { className: 'slide' + (i === 0 ? ' active' : '') });
-            slide.append(
-                el('div', { className: 'emoji', ariaHidden: 'true' }, s.emoji),
-                el('h3', {}, s.title),
-                el('p', {}, s.text)
-            );
-            slideshow.append(slide);
-        });
+
+        async function initSlideshow() {
+            slideshow.replaceChildren();
+            let drinks = [];
+            try {
+                const res = await fetch('/api/random-drinks?limit=6&with_image=1');
+                if (res.ok) {
+                    const data = await res.json();
+                    drinks = data.drinks || [];
+                }
+            } catch { }
+
+            if (!drinks.length) {
+                const fallback = el('div', { className: 'slide active' });
+                const ov = el('div', { className: 'slide-overlay' });
+                ov.append(el('h3', {}, 'Explore Non-Alcoholic Creations'), el('span', {}, 'Browse the menu below'));
+                fallback.append(ov);
+                slideshow.append(fallback);
+                return;
+            }
+
+            drinks.forEach((d, i) => {
+                const slide = el('a', {
+                    className: 'slide' + (i === 0 ? ' active' : ''),
+                    href: `/drink/${d.drink_id}`
+                });
+                if (d.thumb_url) {
+                    const img = el('img', { src: d.thumb_url, alt: d.name, loading: 'lazy' });
+                    img.setAttribute('referrerpolicy', 'no-referrer');
+                    slide.append(img);
+                }
+                const overlay = el('div', { className: 'slide-overlay' });
+                overlay.append(
+                    el('h3', {}, d.name),
+                    el('span', {}, d.category || 'Featured Drink')
+                );
+                slide.append(overlay);
+                slideshow.append(slide);
+            });
+        }
 
         function showSlide(i) {
             const slides = slideshow.querySelectorAll('.slide');
+            if (!slides.length) return;
             slides.forEach((s) => s.classList.remove('active'));
             slideIndex = (i + slides.length) % slides.length;
             slides[slideIndex].classList.add('active');
@@ -425,31 +475,57 @@
             if (!slideshow.matches(':hover')) showSlide(slideIndex + 1);
         }, 4500);
 
+        initSlideshow();
 
-        // ---------- Pantry (logged-in users only) ----------
-        function loadPantry() {
-            selected.clear();
-            if (window.loadPantryApi) window.loadPantryApi(); else drawJar();
-        }
-
+        // ---------- Draggable Pantry Jar + Trash Can ----------
         function drawJar() {
             const jar = $('jar');
             jar.replaceChildren();
             pantry.forEach((item) => {
-                const word = el('span', { className: 'word' }, item);
+                if (!positions.has(item)) {
+                    positions.set(item, {
+                        left: Math.floor(Math.random() * 68) + 4,
+                        top: Math.floor(Math.random() * 70) + 6
+                    });
+                }
+                const pos = positions.get(item);
+                const word = el('span', { className: 'word', draggable: true }, item);
                 if (selected.has(item)) word.classList.add('selected');
-                word.style.left = `${Math.floor(Math.random() * 70)}%`;
-                word.style.top = `${Math.floor(Math.random() * 75)}%`;
-                word.style.animationDelay = `${(Math.random() * -6).toFixed(2)}s`;
+                word.style.left = `${pos.left}%`;
+                word.style.top = `${pos.top}%`;
                 word.setAttribute('role', 'button');
                 word.setAttribute('tabindex', '0');
+
                 word.addEventListener('click', () => toggleSelected(item));
                 word.addEventListener('keydown', (e) => {
                     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleSelected(item); }
                 });
+
+                word.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text/plain', item);
+                    e.dataTransfer.effectAllowed = 'move';
+                });
+
                 jar.append(word);
             });
         }
+
+        // Reposition inside the jar on drop
+        const jarEl = $('jar');
+        jarEl.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        });
+        jarEl.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const item = e.dataTransfer.getData('text/plain');
+            if (!item || !pantry.includes(item)) return;
+            const rect = jarEl.getBoundingClientRect();
+            const left = Math.max(2, Math.min(78, ((e.clientX - rect.left - 30) / rect.width) * 100));
+            const top = Math.max(4, Math.min(78, ((e.clientY - rect.top - 14) / rect.height) * 100));
+            positions.set(item, { left: Math.round(left), top: Math.round(top) });
+            drawJar();
+        });
 
         function toggleSelected(item) {
             if (selected.has(item)) selected.delete(item);
@@ -457,137 +533,51 @@
             drawJar();
         }
 
-
-
-        // ---------- Surprise me (non-alcoholic only) ----------
-        const DRINK_API = 'https://www.thecocktaildb.com/api/json/v1/1';
-
-        // Every query below is restricted to TheCocktailDB's Non_Alcoholic category.
-        // The list is fetched once per page load and reused.
-        let nonAlcoholicDrinks = null;   // array of { idDrink, strDrink, strDrinkThumb }
-        let nonAlcoholicIds = null;      // Set of idDrink strings, for fast membership checks
-
-        async function getNonAlcoholicDrinks() {
-            if (nonAlcoholicDrinks) return nonAlcoholicDrinks;
-            const r = await fetch(`${DRINK_API}/filter.php?a=Non_Alcoholic`);
-            if (!r.ok) throw new Error(`HTTP ${r.status}`);
-            const list = (await r.json()).drinks || [];
-            nonAlcoholicDrinks = list.map((d) => ({
-                idDrink: String(d.idDrink),
-                strDrink: d.strDrink,
-                strDrinkThumb: d.strDrinkThumb
-            }));
-            nonAlcoholicIds = new Set(nonAlcoholicDrinks.map((d) => d.idDrink));
-            return nonAlcoholicDrinks;
-        }
-
-        function getSelected() {
-            return [...selected].map(clean).filter((s) => s.length >= 2);
-        }
-
-        function shuffle(arr) {
-            const a = [...arr];
-            for (let i = a.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [a[i], a[j]] = [a[j], a[i]];
-            }
-            return a;
-        }
-
-        // Fetches the full drink record and confirms the database marks it non-alcoholic.
-        async function lookupNonAlcoholic(idDrink) {
-            const r = await fetch(`${DRINK_API}/lookup.php?i=${encodeURIComponent(idDrink)}`);
-            if (!r.ok) throw new Error(`HTTP ${r.status}`);
-            const drink = ((await r.json()).drinks || [])[0];
-            if (!drink) return null;
-            return /non.?alcoholic/i.test(drink.strAlcoholic || '') ? drink : null;
-        }
-
-        $('surpriseBtn').addEventListener('click', surprise);
-
-        async function surprise() {
+        // Surprise me using our MariaDB endpoints
+        $('surpriseBtn').addEventListener('click', async () => {
             const result = $('surpriseResult');
             result.replaceChildren(el('p', {}, 'Mixing something up...'));
-            const ingredients = currentUser ? getSelected() : [];
+            const chosen = [...selected];
 
             try {
-                const pool = await getNonAlcoholicDrinks();
-                if (!pool.length) throw new Error('No drinks returned');
-
-                let drink = null;
-
-                if (ingredients.length) {
-                    // Try the selected ingredients in random order until one has a non-alcoholic match
-                    for (const ing of shuffle(ingredients)) {
-                        const r = await fetch(`${DRINK_API}/filter.php?i=${encodeURIComponent(ing)}`);
-                        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-                        const matches = ((await r.json()).drinks || [])
-                            .map((d) => String(d.idDrink))
-                            .filter((id) => nonAlcoholicIds.has(id));
-                        if (!matches.length) continue;
-
-                        const chosen = matches[Math.floor(Math.random() * matches.length)];
-                        drink = await lookupNonAlcoholic(chosen);
-                        if (drink) break;
-                    }
-
-                    if (!drink) {
-                        result.replaceChildren(el('p', {},
-                            'No non-alcoholic drinks found with your selected ingredients. Try different ones, or deselect them for a random pick.'));
+                if (currentUser && chosen.length) {
+                    const res = await fetch('/api/match', {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ ingredients: chosen, limit: 8 })
+                    });
+                    const data = await res.json();
+                    if (data.success && data.matches && data.matches.length) {
+                        const pick = data.matches[Math.floor(Math.random() * data.matches.length)];
+                        window.location.href = `/drink/${pick.drink_id}`;
                         return;
                     }
-                    renderDrink(drink, ingredients);
+                }
+                const r = await fetch('/api/random-drinks?limit=1&with_image=1');
+                const d = await r.json();
+                if (d.success && d.drinks && d.drinks.length) {
+                    const drink = d.drinks[0];
+                    result.replaceChildren();
+                    const card = el('a', { className: 'drink-card', href: `/drink/${drink.drink_id}`, style: 'max-width:260px;' });
+                    if (drink.thumb_url) {
+                        const img = el('img', { src: drink.thumb_url, alt: drink.name });
+                        img.setAttribute('referrerpolicy', 'no-referrer');
+                        card.append(img);
+                    }
+                    const body = el('div', { className: 'card-body' });
+                    body.append(el('h3', {}, drink.name), el('span', { className: 'meta' }, drink.category || 'Surprise Pick'));
+                    card.append(body);
+                    result.append(card);
                 } else {
-                    // Random pick from the non-alcoholic pool
-                    const chosen = pool[Math.floor(Math.random() * pool.length)].idDrink;
-                    drink = await lookupNonAlcoholic(chosen);
-                    if (!drink) throw new Error('Random drink was not non-alcoholic');
-                    renderDrink(drink, []);
+                    result.replaceChildren(el('p', {}, 'No drinks found right now.'));
                 }
             } catch {
                 result.replaceChildren(el('p', {}, 'Could not reach the drink database. Please try again.'));
             }
-        }
-
-        function renderDrink(drink, usedIngredients) {
-            const result = $('surpriseResult');
-            result.replaceChildren();
-
-            const title = clean(drink.strDrink || 'Surprise drink');
-            result.append(el('h3', {}, title));
-
-            // Only show images served from the drink database's own domain
-            const img = drink.strDrinkThumb || '';
-            if (img.startsWith('https://www.thecocktaildb.com/')) {
-                result.append(el('img', { src: img, alt: title, loading: 'lazy' }));
-            }
-
-            if (usedIngredients.length) {
-                result.append(el('p', { className: 'surprise-note' },
-                    `Searched with: ${usedIngredients.join(', ')}`));
-            } else {
-                result.append(el('p', { className: 'surprise-note' },
-                    'Random non-alcoholic pick. Select pantry ingredients for a targeted search.'));
-            }
-
-            const ingList = el('ul', { className: 'drink-list' });
-            for (let i = 1; i <= 15; i++) {
-                const ing = clean(drink[`strIngredient${i}`]);
-                if (!ing) continue;
-                const measure = String(drink[`strMeasure${i}`] ?? '').replace(/[<>]/g, '').trim().slice(0, 40);
-                ingList.append(el('li', {}, measure ? `${measure} ${ing}` : ing));
-            }
-            if (ingList.children.length) result.append(ingList);
-
-            const steps = String(drink.strInstructions ?? '').replace(/[<>]/g, '').trim().slice(0, 600);
-            if (steps) result.append(el('p', {}, steps));
-        }
-
-        // ---------- Start ----------
-        loadUser();
+        });
     </script>
     <script src="/drinks.js"></script>
-
 </body>
 
 </html>
