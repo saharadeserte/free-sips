@@ -357,14 +357,17 @@ function matchRecipes(PDO $pdo, array $r): array
 
     $ph = implode(',', array_fill(0, count($have), '?'));
     $stmt = $pdo->prepare(
-        "SELECT d.drink_id, d.name, d.thumb_url,
-                COUNT(*) AS total, SUM(di.ingredient_id IN ($ph)) AS have
-         FROM drinks d
-         JOIN drink_ingredients di ON di.drink_id = d.drink_id
-         WHERE d.status = 'published' OR d.created_by = ?
-         GROUP BY d.drink_id, d.name, d.thumb_url
-         HAVING have > 0
-         ORDER BY (have = total) DESC, have / total DESC, have DESC, d.name
+        "SELECT drink_id, name, thumb_url, total, have
+         FROM (
+             SELECT d.drink_id, d.name, d.thumb_url,
+                    COUNT(*) AS total, SUM(di.ingredient_id IN ($ph)) AS have
+             FROM drinks d
+             JOIN drink_ingredients di ON di.drink_id = d.drink_id
+             WHERE d.status = 'published' OR d.created_by = ?
+             GROUP BY d.drink_id, d.name, d.thumb_url
+         ) AS matched
+         WHERE have > 0
+         ORDER BY (have = total) DESC, have / total DESC, have DESC, name
          LIMIT $limit"
     );
     $stmt->execute([...$have, $uid]);
