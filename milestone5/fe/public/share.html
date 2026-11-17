@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Share a Drink | FreeSpirit Sips</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <header class="topbar"></header>
+    <main>
+        <h1>Share a Drink Recipe</h1>
+        <p class="tagline">Non-alcoholic recipes only. Include an optional <code>https://</code> image URL to showcase your creation.</p>
+
+        <section class="auth-card" style="max-width:580px;">
+            <p id="loginNotice" class="form-message err" hidden>Please <a href="/login">log in</a> to submit a recipe.</p>
+            <form id="shareForm" autocomplete="off">
+                <label for="rName">Drink Name</label>
+                <input id="rName" type="text" maxlength="100" placeholder="e.g. Iced Matcha Yuzu Fizz" required>
+
+                <label for="rCat">Category</label>
+                <input id="rCat" type="text" maxlength="60" placeholder="e.g. Coffee / Tea, Shake, Punch / Party Drink">
+
+                <label for="rGlass">Glassware <span class="hint">(optional)</span></label>
+                <input id="rGlass" type="text" maxlength="60" placeholder="e.g. Highball glass">
+
+                <label for="rThumb">Image URL <span class="hint">(optional, must start with https://)</span></label>
+                <input id="rThumb" type="url" maxlength="255" placeholder="https://example.com/drink.jpg">
+                <img id="thumbPreview" alt="Recipe preview" referrerpolicy="no-referrer" hidden style="margin-top:10px;max-height:160px;border-radius:12px;display:block;">
+
+                <label for="rIngs">Ingredients <span class="hint">(one per line: <code>2 oz | lemon juice</code> or <code>mint</code>)</span></label>
+                <textarea id="rIngs" rows="5" placeholder="2 oz | lemon juice&#10;1 tsp | matcha powder&#10;ice" required></textarea>
+
+                <label for="rSteps">Instructions</label>
+                <textarea id="rSteps" rows="4" maxlength="2000" placeholder="Whisk matcha with warm water, pour over ice..." required></textarea>
+
+                <button id="submitBtn" type="submit" class="btn-primary">Submit Recipe</button>
+            </form>
+            <p id="formMsg" class="form-message" hidden></p>
+        </section>
+    </main>
+    <div class="sip-border"></div>
+
+    <script src="/site.js"></script>
+    <script>
+        const form = document.getElementById('shareForm');
+        const msg = document.getElementById('formMsg');
+        const thumbInput = document.getElementById('rThumb');
+        const preview = document.getElementById('thumbPreview');
+
+        thumbInput.addEventListener('input', () => {
+            const url = thumbInput.value.trim();
+            if (url.startsWith('https://')) {
+                preview.src = url;
+                preview.hidden = false;
+            } else {
+                preview.hidden = true;
+            }
+        });
+
+        window.addEventListener('fs:auth', (e) => {
+            const locked = !e.detail.user;
+            document.getElementById('loginNotice').hidden = !locked;
+            form.querySelectorAll('input, textarea, button').forEach((el) => { el.disabled = locked; });
+        });
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            msg.hidden = true;
+
+            const thumb = thumbInput.value.trim();
+            if (thumb && !thumb.startsWith('https://')) {
+                msg.textContent = 'Image URL must begin with https://';
+                msg.className = 'form-message err';
+                msg.hidden = false;
+                return;
+            }
+
+            const ingredients = document.getElementById('rIngs').value
+                .split('\n')
+                .map((l) => l.trim())
+                .filter(Boolean)
+                .slice(0, 15)
+                .map((line) => {
+                    const [a, b] = line.split('|').map((s) => s.trim());
+                    return b === undefined ? { name: a, measure: '' } : { name: b, measure: a };
+                });
+
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/recipes', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: document.getElementById('rName').value.trim(),
+                        category: document.getElementById('rCat').value.trim(),
+                        glass: document.getElementById('rGlass').value.trim(),
+                        thumb_url: thumb,
+                        instructions: document.getElementById('rSteps').value.trim(),
+                        ingredients
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    msg.textContent = 'Recipe submitted! Redirecting to your drink page...';
+                    msg.className = 'form-message ok';
+                    msg.hidden = false;
+                    setTimeout(() => { window.location.href = `/drink/${data.drink_id}`; }, 1200);
+                } else {
+                    msg.textContent = data.error || 'Could not submit recipe.';
+                    msg.className = 'form-message err';
+                    msg.hidden = false;
+                }
+            } catch {
+                msg.textContent = 'Server error. Please try again.';
+                msg.className = 'form-message err';
+                msg.hidden = false;
+            } finally {
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

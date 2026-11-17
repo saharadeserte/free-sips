@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browse Drinks | FreeSpirit Sips</title>
+    <link rel="stylesheet" href="/styles.css">
+    <style>
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            margin: 16px 0;
+        }
+        .pill {
+            background: var(--white);
+            color: var(--deep);
+            border: 2px solid var(--rose);
+            border-radius: 9999px;
+            padding: 6px 14px;
+            font: inherit;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .pill[aria-pressed="true"] {
+            background: var(--deep);
+            color: var(--blush);
+            border-color: var(--deep);
+        }
+        .filter-select {
+            padding: 7px 12px;
+            border-radius: 9999px;
+            border: 2px solid var(--rose);
+            background: var(--white);
+            color: var(--deep);
+            font: inherit;
+        }
+    </style>
+</head>
+<body>
+    <header class="topbar"></header>
+    <main>
+        <h1>Browse All Drinks</h1>
+        <p class="tagline">Filter by mood tag, category, or rating.</p>
+
+        <div class="filters" id="tagBar" role="group" aria-label="Filter by tag"></div>
+        <div class="filters">
+            <select id="categorySelect" class="filter-select" aria-label="Filter by category">
+                <option value="">All Categories</option>
+            </select>
+            <select id="sortSelect" class="filter-select" aria-label="Sort drinks">
+                <option value="name">Sort: A–Z</option>
+                <option value="rating">Sort: Highest Rated</option>
+            </select>
+        </div>
+
+        <p id="statusMsg" class="tagline"></p>
+        <div class="drink-grid" id="catalogGrid"></div>
+    </main>
+    <div class="sip-border"></div>
+
+    <script src="/site.js"></script>
+    <script>
+        const TAGS = ['All', 'Iced', 'Hot', 'Smoothie', 'Dessert', 'Healthy', 'Matcha'];
+        let activeTag = new URLSearchParams(window.location.search).get('tag') || '';
+        let currentDrinks = [];
+
+        function el(tag, props = {}, text = '') {
+            const n = document.createElement(tag);
+            Object.assign(n, props);
+            if (text) n.textContent = text;
+            return n;
+        }
+
+        const tagBar = document.getElementById('tagBar');
+        TAGS.forEach((t) => {
+            const val = t === 'All' ? '' : t;
+            const btn = el('button', { className: 'pill', type: 'button' }, t);
+            btn.setAttribute('aria-pressed', String(val.toLowerCase() === activeTag.toLowerCase()));
+            btn.addEventListener('click', () => {
+                activeTag = val;
+                tagBar.querySelectorAll('.pill').forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+                fetchCatalog();
+            });
+            tagBar.append(btn);
+        });
+
+        async function loadCategories() {
+            try {
+                const res = await fetch('/api/categories');
+                const data = await res.json();
+                const sel = document.getElementById('categorySelect');
+                (data.categories || []).forEach((c) => {
+                    sel.append(el('option', { value: c.name }, `${c.name} (${c.count})`));
+                });
+            } catch { }
+        }
+
+        async function fetchCatalog() {
+            const status = document.getElementById('statusMsg');
+            const grid = document.getElementById('catalogGrid');
+            status.textContent = 'Loading drinks...';
+            grid.replaceChildren();
+
+            const cat = document.getElementById('categorySelect').value;
+            const params = new URLSearchParams({ limit: '100' });
+            if (activeTag) params.set('tag', activeTag);
+            if (cat) params.set('category', cat);
+
+            try {
+                const res = await fetch(`/api/drinks?${params.toString()}`);
+                const data = await res.json();
+                if (!data.success) {
+                    status.textContent = 'Could not load drinks right now.';
+                    return;
+                }
+                currentDrinks = data.drinks || [];
+                renderCatalog();
+            } catch {
+                status.textContent = 'Could not reach server.';
+            }
+        }
+
+        function renderCatalog() {
+            const status = document.getElementById('statusMsg');
+            const grid = document.getElementById('catalogGrid');
+            grid.replaceChildren();
+
+            const sort = document.getElementById('sortSelect').value;
+            const list = [...currentDrinks];
+            if (sort === 'rating') {
+                list.sort((a, b) => (b.avg_rating || 0) - (a.avg_rating || 0));
+            } else {
+                list.sort((a, b) => a.name.localeCompare(b.name));
+            }
+
+            status.textContent = `${list.length} drink${list.length === 1 ? '' : 's'} found`;
+            list.forEach((d) => {
+                const card = el('a', { className: 'drink-card', href: `/drink/${d.drink_id}` });
+                if (d.thumb_url) {
+                    const img = el('img', { src: d.thumb_url, alt: d.name, loading: 'lazy' });
+                    img.setAttribute('referrerpolicy', 'no-referrer');
+                    card.append(img);
+                }
+                const body = el('div', { className: 'card-body' });
+                body.append(
+                    el('h3', {}, d.status === 'pending' ? `${d.name} (Pending)` : d.name),
+                    el('span', { className: 'meta' }, `${d.category || 'Drink'} · ${d.review_count ? `★ ${d.avg_rating}` : 'No reviews'}`)
+                );
+                card.append(body);
+                grid.append(card);
+            });
+        }
+
+        document.getElementById('categorySelect').addEventListener('change', fetchCatalog);
+        document.getElementById('sortSelect').addEventListener('change', renderCatalog);
+
+        loadCategories();
+        fetchCatalog();
+    </script>
+</body>
+</html>

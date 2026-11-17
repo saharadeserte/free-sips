@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FreeSpirit Sips</title>
+    <link rel="stylesheet" href="/styles.css">
+    <style>
+        .hero {
+            text-align: center;
+            padding: 6px 0 4px;
+        }
+
+        .hero p {
+            color: var(--mauve);
+            max-width: 560px;
+            margin: 8px auto 0;
+        }
+
+        /* Spec 3b: Uniform slideshow with dark overlay & clickable drinks */
+        .slideshow {
+            position: relative;
+            height: 290px;
+            margin-top: 20px;
+            border-radius: 22px;
+            background: var(--deep);
+            border: 3px solid var(--rose);
+            overflow: hidden;
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            display: none;
+            text-decoration: none;
+            color: #fff;
+        }
+
+        .slide.active {
+            display: block;
+            animation: fade 0.5s ease;
+        }
+
+        .slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .slide-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(20, 8, 28, 0.88) 0%, rgba(20, 8, 28, 0.35) 55%, rgba(20, 8, 28, 0.15) 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            text-align: center;
+            padding: 22px 20px;
+        }
+
+        .slide-overlay h3 {
+            margin: 0 0 4px;
+            font-family: Georgia, serif;
+            font-size: 1.65rem;
+            color: #ffffff;
+            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+        }
+
+        .slide-overlay span {
+            font-size: 0.9rem;
+            color: #ffdede;
+            background: rgba(0, 0, 0, 0.45);
+            padding: 3px 12px;
+            border-radius: 9999px;
+        }
+
+        .slide-controls {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 10px;
+        }
+
+        .slide-controls button {
+            background: var(--deep);
+            color: var(--blush);
+            border: none;
+            border-radius: 9999px;
+            padding: 6px 14px;
+            cursor: pointer;
+        }
+
+        @keyframes fade {
+            from { opacity: 0.2; }
+            to { opacity: 1; }
+        }
+
+        .section {
+            margin-top: 28px;
+        }
+
+        .section-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .section-head a {
+            color: var(--deep);
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+
+        .tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 12px 0;
+        }
+
+        .tab {
+            background: var(--white);
+            color: var(--deep);
+            border: 2px solid var(--rose);
+            border-radius: 9999px;
+            padding: 6px 16px;
+            cursor: pointer;
+            font: inherit;
+            font-weight: 600;
+        }
+
+        .tab[aria-selected="true"] {
+            background: var(--deep);
+            color: var(--blush);
+            border-color: var(--deep);
+        }
+
+        .drink-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .drink-list li {
+            background: var(--cream);
+            border: 2px solid var(--rose);
+            border-radius: 14px;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .drink-list a {
+            color: var(--deep);
+            font-weight: 700;
+            text-decoration: none;
+            font-size: 1.05rem;
+        }
+
+        .drink-list a:hover {
+            text-decoration: underline;
+        }
+
+        .drink-list span {
+            color: var(--mauve);
+            font-size: 0.9rem;
+        }
+
+        .locked {
+            color: var(--mauve);
+            font-size: 0.95rem;
+        }
+
+        .pantry-form {
+            display: flex;
+            gap: 8px;
+            margin: 12px 0;
+        }
+
+        .pantry-input-wrap {
+            flex: 1;
+            position: relative;
+        }
+
+        .pantry-input-wrap input {
+            width: 100%;
+            padding: 9px 14px;
+            border-radius: 9999px;
+            border: 1px solid var(--rose);
+            font: inherit;
+            background: var(--white);
+            color: var(--deep);
+        }
+
+        .pantry-form button,
+        .surprise-btn {
+            background: var(--orange);
+            color: var(--deep);
+            border: none;
+            border-radius: 9999px;
+            padding: 8px 16px;
+            font-weight: 700;
+            cursor: pointer;
+            font: inherit;
+        }
+
+        .pantry-form button:disabled,
+        .surprise-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Pantry workspace with draggable boxes & big trash can */
+        .pantry-workspace {
+            display: grid;
+            grid-template-columns: 1fr 110px;
+            gap: 14px;
+            align-items: stretch;
+        }
+
+        .jar {
+            position: relative;
+            height: 230px;
+            border: 3px solid var(--mauve);
+            border-radius: 24px;
+            background: var(--white);
+            overflow: hidden;
+        }
+
+        .jar.disabled {
+            filter: grayscale(0.6);
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .trash-dropzone {
+            border: 3px dashed var(--rose);
+            border-radius: 24px;
+            background: var(--cream);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 10px;
+            user-select: none;
+            transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+        }
+
+        .trash-dropzone .trash-emoji {
+            font-size: 3.4rem;
+            line-height: 1;
+        }
+
+        .trash-dropzone span {
+            font-size: 0.78rem;
+            color: var(--mauve);
+            margin-top: 6px;
+            font-weight: 600;
+        }
+
+        .trash-dropzone.drag-over {
+            background: #fde8e8;
+            border-color: #c93b3b;
+            transform: scale(1.05);
+        }
+
+        .word {
+            position: absolute;
+            padding: 7px 12px;
+            background: var(--deep);
+            color: var(--blush);
+            border-radius: 10px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            cursor: grab;
+            user-select: none;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.16);
+        }
+
+        .word:active {
+            cursor: grabbing;
+        }
+
+        .word.selected {
+            background: var(--orange);
+            color: var(--deep);
+            outline: 2px solid var(--deep);
+        }
+
+        .surprise-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        .surprise-note {
+            color: var(--mauve);
+            font-size: 0.85rem;
+        }
+
+        .surprise-result {
+            margin-top: 14px;
+        }
+
+        @media (max-width: 560px) {
+            .pantry-workspace {
+                grid-template-columns: 1fr;
+            }
+            .trash-dropzone {
+                flex-direction: row;
+                gap: 10px;
+                padding: 12px;
+            }
+            .trash-dropzone .trash-emoji {
+                font-size: 2.2rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="topbar"></header>
+
+    <main>
+        <section class="hero">
+            <span class="badge">Non-alcoholic drinks for every mood</span>
+            <h1>FreeSpirit Sips</h1>
+            <p>Our drinks are made to be sipped slowly, and every drink on this site is non-alcoholic. Browse the menu
+                below, add what is in your kitchen to the pantry jar, and let us surprise you with something new.</p>
+            <a class="cta-browse" href="/index">🍹 Browse Drinks</a>
+        </section>
+
+        <div class="slideshow" id="slideshow" aria-live="polite"></div>
+        <div class="slide-controls">
+            <button type="button" id="prevSlide" aria-label="Previous drink">&larr;</button>
+            <button type="button" id="nextSlide" aria-label="Next drink">&rarr;</button>
+        </div>
+
+        <section class="section" id="menu">
+            <div class="section-head">
+                <h2>Featured Drinks</h2>
+                <a href="/index">View all drinks &rarr;</a>
+            </div>
+            <div class="tabs" role="tablist" id="categoryTabs"></div>
+            <ul class="drink-list" id="drinkList"></ul>
+        </section>
+
+        <section class="section" id="pantry">
+            <h2>Pantry</h2>
+            <p class="locked" id="pantryNote"></p>
+            <form class="pantry-form" id="pantryForm" autocomplete="off">
+                <div class="pantry-input-wrap">
+                    <input type="text" id="pantryInput" maxlength="40" placeholder="e.g. lemon, mint, oat milk, yoghurt"
+                        aria-label="Add an ingredient">
+                </div>
+                <button type="submit" id="pantryAdd">Add</button>
+            </form>
+            <div class="pantry-workspace">
+                <div class="jar" id="jar" aria-label="Pantry jar. Click ingredients to select or drag them to the trash can."></div>
+                <div class="trash-dropzone" id="trashCan" aria-label="Drag ingredient here to delete">
+                    <div class="trash-emoji" aria-hidden="true">🗑️</div>
+                    <span>Drag here to remove</span>
+                </div>
+            </div>
+            <div class="surprise-row">
+                <button type="button" class="surprise-btn" id="surpriseBtn">Surprise me</button>
+                <span class="surprise-note" id="surpriseNote">Click ingredients to select them, or drag them to the 🗑️ trash can to delete.</span>
+            </div>
+            <div class="surprise-result" id="surpriseResult" aria-live="polite"></div>
+        </section>
+
+        <section class="info-card" id="info">
+            <h2>About</h2>
+            <p>FreeSpirit Sips is a non-alcoholic beverage discovery platform. Browsing and search are open to everyone. Log in to save ingredients to your personal pantry jar or share your own drink recipes.</p>
+        </section>
+    </main>
+
+    <div class="sip-border"></div>
+
+    <script src="/site.js"></script>
+    <script>
+        const $ = (id) => document.getElementById(id);
+
+        function clean(value) {
+            return String(value ?? '')
+                .replace(/[^\p{L}\p{N} '\-]/gu, '')
+                .replace(/\s+/g, ' ')
+                .trim()
+                .slice(0, 40);
+        }
+
+        function el(tag, props = {}, text = '') {
+            const node = document.createElement(tag);
+            Object.assign(node, props);
+            if (text) node.textContent = text;
+            return node;
+        }
+
+        let currentUser = null;
+        let pantry = [];
+        const positions = new Map();
+        const selected = new Set();
+
+        window.addEventListener('fs:auth', (e) => {
+            currentUser = e.detail.user;
+            if (window.loadPantryApi) window.loadPantryApi();
+        });
+
+        // ---------- Slideshow (from /api/random-drinks) ----------
+        let slideIndex = 0;
+        const slideshow = $('slideshow');
+
+        async function initSlideshow() {
+            slideshow.replaceChildren();
+            let drinks = [];
+            try {
+                const res = await fetch('/api/random-drinks?limit=6&with_image=1');
+                if (res.ok) {
+                    const data = await res.json();
+                    drinks = data.drinks || [];
+                }
+            } catch { }
+
+            if (!drinks.length) {
+                const fallback = el('div', { className: 'slide active' });
+                const ov = el('div', { className: 'slide-overlay' });
+                ov.append(el('h3', {}, 'Explore Non-Alcoholic Creations'), el('span', {}, 'Browse the menu below'));
+                fallback.append(ov);
+                slideshow.append(fallback);
+                return;
+            }
+
+            drinks.forEach((d, i) => {
+                const slide = el('a', {
+                    className: 'slide' + (i === 0 ? ' active' : ''),
+                    href: `/drink/${d.drink_id}`
+                });
+                if (d.thumb_url) {
+                    const img = el('img', { src: d.thumb_url, alt: d.name, loading: 'lazy' });
+                    img.setAttribute('referrerpolicy', 'no-referrer');
+                    slide.append(img);
+                }
+                const overlay = el('div', { className: 'slide-overlay' });
+                overlay.append(
+                    el('h3', {}, d.name),
+                    el('span', {}, d.category || 'Featured Drink')
+                );
+                slide.append(overlay);
+                slideshow.append(slide);
+            });
+        }
+
+        function showSlide(i) {
+            const slides = slideshow.querySelectorAll('.slide');
+            if (!slides.length) return;
+            slides.forEach((s) => s.classList.remove('active'));
+            slideIndex = (i + slides.length) % slides.length;
+            slides[slideIndex].classList.add('active');
+        }
+
+        $('prevSlide').addEventListener('click', () => showSlide(slideIndex - 1));
+        $('nextSlide').addEventListener('click', () => showSlide(slideIndex + 1));
+        setInterval(() => {
+            if (!slideshow.matches(':hover')) showSlide(slideIndex + 1);
+        }, 4500);
+
+        initSlideshow();
+
+        // ---------- Draggable Pantry Jar + Trash Can ----------
+        function drawJar() {
+            const jar = $('jar');
+            jar.replaceChildren();
+            pantry.forEach((item) => {
+                if (!positions.has(item)) {
+                    positions.set(item, {
+                        left: Math.floor(Math.random() * 68) + 4,
+                        top: Math.floor(Math.random() * 70) + 6
+                    });
+                }
+                const pos = positions.get(item);
+                const word = el('span', { className: 'word', draggable: true }, item);
+                if (selected.has(item)) word.classList.add('selected');
+                word.style.left = `${pos.left}%`;
+                word.style.top = `${pos.top}%`;
+                word.setAttribute('role', 'button');
+                word.setAttribute('tabindex', '0');
+
+                word.addEventListener('click', () => toggleSelected(item));
+                word.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleSelected(item); }
+                });
+
+                word.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text/plain', item);
+                    e.dataTransfer.effectAllowed = 'move';
+                });
+
+                jar.append(word);
+            });
+        }
+
+        // Reposition inside the jar on drop
+        const jarEl = $('jar');
+        jarEl.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        });
+        jarEl.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const item = e.dataTransfer.getData('text/plain');
+            if (!item || !pantry.includes(item)) return;
+            const rect = jarEl.getBoundingClientRect();
+            const left = Math.max(2, Math.min(78, ((e.clientX - rect.left - 30) / rect.width) * 100));
+            const top = Math.max(4, Math.min(78, ((e.clientY - rect.top - 14) / rect.height) * 100));
+            positions.set(item, { left: Math.round(left), top: Math.round(top) });
+            drawJar();
+        });
+
+        function toggleSelected(item) {
+            if (selected.has(item)) selected.delete(item);
+            else selected.add(item);
+            drawJar();
+        }
+
+        // Surprise me using our MariaDB endpoints
+        $('surpriseBtn').addEventListener('click', async () => {
+            const result = $('surpriseResult');
+            result.replaceChildren(el('p', {}, 'Mixing something up...'));
+            const chosen = [...selected];
+
+            try {
+                if (currentUser && chosen.length) {
+                    const res = await fetch('/api/match', {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ ingredients: chosen, limit: 8 })
+                    });
+                    const data = await res.json();
+                    if (data.success && data.matches && data.matches.length) {
+                        const pick = data.matches[Math.floor(Math.random() * data.matches.length)];
+                        window.location.href = `/drink/${pick.drink_id}`;
+                        return;
+                    }
+                }
+                const r = await fetch('/api/random-drinks?limit=1&with_image=1');
+                const d = await r.json();
+                if (d.success && d.drinks && d.drinks.length) {
+                    const drink = d.drinks[0];
+                    result.replaceChildren();
+                    const card = el('a', { className: 'drink-card', href: `/drink/${drink.drink_id}`, style: 'max-width:260px;' });
+                    if (drink.thumb_url) {
+                        const img = el('img', { src: drink.thumb_url, alt: drink.name });
+                        img.setAttribute('referrerpolicy', 'no-referrer');
+                        card.append(img);
+                    }
+                    const body = el('div', { className: 'card-body' });
+                    body.append(el('h3', {}, drink.name), el('span', { className: 'meta' }, drink.category || 'Surprise Pick'));
+                    card.append(body);
+                    result.append(card);
+                } else {
+                    result.replaceChildren(el('p', {}, 'No drinks found right now.'));
+                }
+            } catch {
+                result.replaceChildren(el('p', {}, 'Could not reach the drink database. Please try again.'));
+            }
+        });
+    </script>
+    <script src="/drinks.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Drinks | FreeSpirit Sips</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <header class="topbar"></header>
+    <main>
+        <h1 id="searchHeading">Search Results</h1>
+        <p id="searchNotice" class="tagline"></p>
+        <div class="drink-grid" id="resultsGrid"></div>
+    </main>
+    <div class="sip-border"></div>
+
+    <script src="/site.js"></script>
+    <script>
+        function el(tag, props = {}, text = '') {
+            const n = document.createElement(tag);
+            Object.assign(n, props);
+            if (text) n.textContent = text;
+            return n;
+        }
+
+        function renderCards(drinks) {
+            const grid = document.getElementById('resultsGrid');
+            grid.replaceChildren();
+            drinks.forEach((d) => {
+                const card = el('a', { className: 'drink-card', href: `/drink/${d.drink_id}` });
+                if (d.thumb_url) {
+                    const img = el('img', { src: d.thumb_url, alt: d.name, loading: 'lazy' });
+                    img.setAttribute('referrerpolicy', 'no-referrer');
+                    card.append(img);
+                }
+                const body = el('div', { className: 'card-body' });
+                body.append(
+                    el('h3', {}, d.name),
+                    el('span', { className: 'meta' }, d.category || 'Drink')
+                );
+                card.append(body);
+                grid.append(card);
+            });
+        }
+
+        async function runSearch() {
+            const q = (new URLSearchParams(window.location.search).get('q') || '').trim();
+            const heading = document.getElementById('searchHeading');
+            const notice = document.getElementById('searchNotice');
+
+            heading.textContent = q ? `Search: "${q}"` : 'Search Results';
+            notice.textContent = 'Searching...';
+
+            try {
+                const res = await fetch(`/api/drinks?q=${encodeURIComponent(q)}&limit=40`);
+                const data = await res.json();
+                if (data.success && data.drinks && data.drinks.length) {
+                    notice.textContent = `Found ${data.drinks.length} matching beverage${data.drinks.length === 1 ? '' : 's'}.`;
+                    renderCards(data.drinks);
+                    return;
+                }
+
+                // Spec 4 fallback: random drinks when nothing matches
+                notice.textContent = 'Could not find searched beverage. Maybe you were looking for this?';
+                const fb = await fetch('/api/random-drinks?limit=6&with_image=1');
+                const fbData = await fb.json();
+                renderCards(fbData.drinks || []);
+            } catch {
+                notice.textContent = 'Search service is unavailable right now.';
+            }
+        }
+
+        runSearch();
+    </script>
+</body>
+</html>

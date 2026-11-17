@@ -1,0 +1,10 @@
+{
+  "name": "chefs-best-friend/backend-database",
+  "description": "IT490 Backend-Database Service Runner",
+  "scripts": {
+    "start": [
+      "Composer\\Config::disableProcessTimeout",
+      "bash ../scripts/start_be-db.sh"
+    ]
+  }
+}

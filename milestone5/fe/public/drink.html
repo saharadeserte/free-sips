@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drink Details | FreeSpirit Sips</title>
+    <link rel="stylesheet" href="/styles.css">
+    <style>
+        .detail-hero {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 24px;
+            background: var(--cream);
+            border: 2px solid var(--rose);
+            border-radius: 22px;
+            padding: 22px;
+            margin-top: 16px;
+        }
+        .detail-hero img {
+            width: 100%;
+            height: 280px;
+            object-fit: cover;
+            border-radius: 16px;
+            background: var(--blush);
+        }
+        .ing-list {
+            padding-left: 20px;
+            margin: 8px 0 16px;
+        }
+        .ing-list li {
+            margin-bottom: 4px;
+        }
+        .review-card {
+            background: var(--cream);
+            border: 1px solid var(--rose);
+            border-radius: 14px;
+            padding: 12px 16px;
+            margin-bottom: 10px;
+        }
+        @media (max-width: 640px) {
+            .detail-hero { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <header class="topbar"></header>
+    <main>
+        <a href="/index" style="color:var(--deep);font-weight:700;">&larr; Back to Browse Drinks</a>
+        <div id="drinkContainer">
+            <p class="tagline">Loading drink details...</p>
+        </div>
+
+        <section style="margin-top:28px;" id="reviewsSection" hidden>
+            <h2>Reviews</h2>
+            <div id="reviewsList"></div>
+            <div id="reviewFormWrap" class="auth-card" style="max-width:100%;"></div>
+        </section>
+
+        <section style="margin-top:32px;" id="similarSection" hidden>
+            <h2>Similar Drinks</h2>
+            <div class="drink-grid" id="similarGrid"></div>
+        </section>
+    </main>
+    <div class="sip-border"></div>
+
+    <script src="/site.js"></script>
+    <script>
+        function el(tag, props = {}, text = '') {
+            const n = document.createElement(tag);
+            Object.assign(n, props);
+            if (text) n.textContent = text;
+            return n;
+        }
+
+        const drinkId = Number(window.location.pathname.split('/').pop());
+
+        async function loadDrink() {
+            const container = document.getElementById('drinkContainer');
+            if (!drinkId) {
+                container.replaceChildren(el('p', {}, 'Invalid drink ID.'));
+                return;
+            }
+            try {
+                const res = await fetch(`/api/drinks/${drinkId}`, { credentials: 'same-origin' });
+                const data = await res.json();
+                if (!data.success || !data.drink) {
+                    container.replaceChildren(el('p', {}, 'Drink not found.'));
+                    return;
+                }
+                const d = data.drink;
+                document.title = `${d.name} | FreeSpirit Sips`;
+                container.replaceChildren();
+
+                const hero = el('div', { className: 'detail-hero' });
+                if (d.thumb_url) {
+                    const img = el('img', { src: d.thumb_url, alt: d.name });
+                    img.setAttribute('referrerpolicy', 'no-referrer');
+                    hero.append(img);
+                } else {
+                    const ph = el('div', { style: 'display:grid;place-items:center;height:280px;font-size:4rem;background:var(--blush);border-radius:16px;' }, '🍹');
+                    hero.append(ph);
+                }
+
+                const info = el('div');
+                const badge = el('span', { className: 'badge' }, d.category || 'Non-Alcoholic');
+                const title = el('h1', { style: 'font-size:2rem;margin-top:4px;' }, d.name);
+                const meta = el('p', { className: 'tagline' },
+                    `${d.glass ? `Served in: ${d.glass} · ` : ''}${d.review_count ? `★ ${d.avg_rating} (${d.review_count} reviews)` : 'No reviews yet'}`
+                );
+
+                const ingTitle = el('h3', { style: 'margin:16px 0 6px;' }, 'Ingredients');
+                const ul = el('ul', { className: 'ing-list' });
+                (d.ingredients || []).forEach((i) => {
+                    ul.append(el('li', {}, i.measure ? `${i.measure} ${i.name}` : i.name));
+                });
+
+                const instTitle = el('h3', { style: 'margin:16px 0 6px;' }, 'Instructions');
+                const inst = el('p', { style: 'line-height:1.5;' }, d.instructions || 'Mix and enjoy!');
+
+                info.append(badge, title, meta, ingTitle, ul, instTitle, inst);
+                hero.append(info);
+                container.append(hero);
+
+                renderReviews(d);
+                loadSimilar(d.category, d.drink_id);
+            } catch {
+                container.replaceChildren(el('p', {}, 'Failed to load drink details.'));
+            }
+        }
+
+        function renderReviews(d) {
+            const sec = document.getElementById('reviewsSection');
+            const list = document.getElementById('reviewsList');
+            const wrap = document.getElementById('reviewFormWrap');
+            sec.hidden = false;
+            list.replaceChildren();
+            wrap.replaceChildren();
+
+            if (!d.reviews || !d.reviews.length) {
+                list.append(el('p', { className: 'tagline' }, 'Be the first to review this drink!'));
+            } else {
+                d.reviews.forEach((rv) => {
+                    const card = el('div', { className: 'review-card' });
+                    card.append(
+                        el('strong', {}, `${'★'.repeat(rv.rating)}${'☆'.repeat(5 - rv.rating)}  ${rv.username}`),
+                        el('p', { style: 'margin:6px 0 0;' }, rv.comment || '')
+                    );
+                    list.append(card);
+                });
+            }
+
+            if (!window.currentUser) {
+                wrap.append(el('p', {}, 'Log in to leave a rating and review.'));
+                return;
+            }
+
+            const form = el('form');
+            const labelR = el('label', {}, 'Your Rating');
+            const select = el('select');
+            [5, 4, 3, 2, 1].forEach((n) => select.append(el('option', { value: String(n) }, `${n} ★`)));
+            const labelC = el('label', {}, 'Comment');
+            const comment = el('input', { type: 'text', maxLength: 500, placeholder: 'What did you think?' });
+            const btn = el('button', { type: 'submit', className: 'btn-primary' }, 'Submit Review');
+            const msg = el('p', { className: 'form-message', hidden: true });
+
+            form.append(labelR, select, labelC, comment, btn, msg);
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                btn.disabled = true;
+                const res = await fetch(`/api/drinks/${drinkId}/reviews`, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ rating: Number(select.value), comment: comment.value })
+                });
+                const out = await res.json();
+                btn.disabled = false;
+                if (out.success) {
+                    loadDrink();
+                } else {
+                    msg.textContent = out.error || 'Could not submit review.';
+                    msg.className = 'form-message err';
+                    msg.hidden = false;
+                }
+            });
+            wrap.append(form);
+        }
+
+        async function loadSimilar(category, currentId) {
+            const sec = document.getElementById('similarSection');
+            const grid = document.getElementById('similarGrid');
+            try {
+                const url = category
+                    ? `/api/drinks?category=${encodeURIComponent(category)}&limit=8`
+                    : '/api/random-drinks?limit=6&with_image=1';
+                const res = await fetch(url);
+                const data = await res.json();
+                const items = (data.drinks || []).filter((x) => x.drink_id !== currentId).slice(0, 4);
+                if (!items.length) return;
+                sec.hidden = false;
+                grid.replaceChildren();
+                items.forEach((s) => {
+                    const card = el('a', { className: 'drink-card', href: `/drink/${s.drink_id}` });
+                    if (s.thumb_url) {
+                        const img = el('img', { src: s.thumb_url, alt: s.name, loading: 'lazy' });
+                        img.setAttribute('referrerpolicy', 'no-referrer');
+                        card.append(img);
+                    }
+                    const body = el('div', { className: 'card-body' });
+                    body.append(el('h3', {}, s.name), el('span', { className: 'meta' }, s.category || 'Drink'));
+                    card.append(body);
+                    grid.append(card);
+                });
+            } catch { }
+        }
+
+        window.addEventListener('fs:auth', () => loadDrink());
+        loadDrink();
+    </script>
+</body>
+</html>
