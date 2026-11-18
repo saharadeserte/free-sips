@@ -100,6 +100,11 @@
 
     // Build shared navbar across all pages
     function initNavbar() {
+        const browseLink = el('a', { className: 'dash-btn', href: '/index', title: 'Browse Drinks', ariaLabel: 'Browse Drinks' }, '📑');
+        const shareLink = el('a', { className: 'dash-btn', href: '/share', title: 'Post a custom drink!' }, 'Share a drink');
+        const dashLink = el('a', { className: 'dash-btn', href: '/dashboard' }, 'Dashboard');
+        if (path === '/dashboard') dashLink.setAttribute('aria-current', 'page');
+        navLinks.append(browseLink, shareLink, dashLink);
         const header = document.querySelector('header.topbar');
         if (!header) return;
         header.replaceChildren();
@@ -108,10 +113,8 @@
         const brand = el('a', { className: 'brand', href: '/' }, '🍵 FreeSpirit Sips');
 
         const navLinks = el('nav', { className: 'nav-links', ariaLabel: 'Primary' });
-        const browseLink = el('a', { className: 'dash-btn', href: '/index' }, 'Browse Drinks');
         if (path === '/index') browseLink.setAttribute('aria-current', 'page');
 
-        const shareLink = el('a', { className: 'dash-btn', href: '/share' }, 'Share a drink');
         if (path === '/share') shareLink.setAttribute('aria-current', 'page');
 
         navLinks.append(browseLink, shareLink);
@@ -125,7 +128,9 @@
             ariaLabel: 'Search drinks',
             value: new URLSearchParams(window.location.search).get('q') || ''
         });
-        const searchBtn = el('button', { type: 'submit' }, 'Search');
+        const searchBtn = el('button', { type: 'submit', title: 'Search', ariaLabel: 'Search' }, '🔍');
+        // in renderSharedAuth, logged-out branch:
+        area.append(loginBtn);   // drop regBtn and its aria-current line
         searchForm.append(searchInput, searchBtn);
         searchWrap.append(searchForm);
 
@@ -205,7 +210,6 @@
             area.append(greeting, settingsLink, logoutBtn);
         } else {
             const loginBtn = el('a', { className: 'dash-btn', href: '/login' }, 'Log in');
-            const regBtn = el('a', { className: 'dash-btn', href: '/register' }, 'Register');
             if (path === '/login') loginBtn.setAttribute('aria-current', 'page');
             if (path === '/register') regBtn.setAttribute('aria-current', 'page');
             area.append(loginBtn, regBtn);

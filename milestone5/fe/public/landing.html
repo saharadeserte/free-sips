@@ -7,6 +7,21 @@
     <title>FreeSpirit Sips</title>
     <link rel="stylesheet" href="/styles.css">
     <style>
+        .about-footer {
+            background: var(--mauve);
+            color: var(--blush);
+            padding: 28px 20px 90px;
+        }
+
+        .about-inner {
+            max-width: 860px;
+            margin: 0 auto;
+        }
+
+        .about-footer h2 {
+            color: var(--blush);
+        }
+
         .hero {
             text-align: center;
             padding: 6px 0 4px;
@@ -94,8 +109,13 @@
         }
 
         @keyframes fade {
-            from { opacity: 0.2; }
-            to { opacity: 1; }
+            from {
+                opacity: 0.2;
+            }
+
+            to {
+                opacity: 1;
+            }
         }
 
         .section {
@@ -183,6 +203,8 @@
             display: flex;
             gap: 8px;
             margin: 12px 0;
+            border: 2px solid var(--deep);
+            box-shadow: 0 3px 0 var(--deep);
         }
 
         .pantry-input-wrap {
@@ -204,7 +226,8 @@
         .surprise-btn {
             background: var(--orange);
             color: var(--deep);
-            border: none;
+            border: 2px solid var(--deep);
+            box-shadow: 0 3px 0 var(--deep);
             border-radius: 9999px;
             padding: 8px 16px;
             font-weight: 700;
@@ -233,6 +256,7 @@
             border-radius: 24px;
             background: var(--white);
             overflow: hidden;
+            background: var(--white) url('/images/empty-shelf.jpg') center / cover no-repeat;
         }
 
         .jar.disabled {
@@ -283,7 +307,7 @@
             font-weight: 600;
             cursor: grab;
             user-select: none;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.16);
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16);
         }
 
         .word:active {
@@ -317,11 +341,13 @@
             .pantry-workspace {
                 grid-template-columns: 1fr;
             }
+
             .trash-dropzone {
                 flex-direction: row;
                 gap: 10px;
                 padding: 12px;
             }
+
             .trash-dropzone .trash-emoji {
                 font-size: 2.2rem;
             }
@@ -367,25 +393,29 @@
                 <button type="submit" id="pantryAdd">Add</button>
             </form>
             <div class="pantry-workspace">
-                <div class="jar" id="jar" aria-label="Pantry jar. Click ingredients to select or drag them to the trash can."></div>
+                <div class="jar" id="jar"
+                    aria-label="Pantry jar. Click ingredients to select or drag them to the trash can."></div>
                 <div class="trash-dropzone" id="trashCan" aria-label="Drag ingredient here to delete">
                     <div class="trash-emoji" aria-hidden="true">🗑️</div>
                     <span>Drag here to remove</span>
                 </div>
             </div>
             <div class="surprise-row">
-                <button type="button" class="surprise-btn" id="surpriseBtn">Surprise me</button>
-                <span class="surprise-note" id="surpriseNote">Click ingredients to select them, or drag them to the 🗑️ trash can to delete.</span>
+                <button type="button" class="surprise-btn" id="surpriseBtn">Surprise Me 🎲</button>
+                <span class="surprise-note" id="surpriseNote">Highlight ingredients in the pantry to search for drinks you can make.
+                    trash can to delete.</span>
             </div>
             <div class="surprise-result" id="surpriseResult" aria-live="polite"></div>
         </section>
-
-        <section class="info-card" id="info">
-            <h2>About</h2>
-            <p>FreeSpirit Sips is a non-alcoholic beverage discovery platform. Browsing and search are open to everyone. Log in to save ingredients to your personal pantry jar or share your own drink recipes.</p>
-        </section>
     </main>
-
+    <footer class="about-footer" id="info">
+        <div class="about-inner">
+            <h2>About</h2>
+            <p>FreeSpirit Sips is a non-alcoholic beverage discovery platform. Browsing and search are open to everyone.
+                Log
+                in to save ingredients to your personal pantry shelf or share your own drink recipes.</p>
+        </div>
+    </footer>
     <div class="sip-border"></div>
 
     <script src="/site.js"></script>
@@ -433,11 +463,8 @@
             } catch { }
 
             if (!drinks.length) {
-                const fallback = el('div', { className: 'slide active' });
-                const ov = el('div', { className: 'slide-overlay' });
-                ov.append(el('h3', {}, 'Explore Non-Alcoholic Creations'), el('span', {}, 'Browse the menu below'));
-                fallback.append(ov);
-                slideshow.append(fallback);
+                slideshow.style.display = 'none';
+                document.querySelector('.slide-controls').style.display = 'none';
                 return;
             }
 
