@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/drinks_api.php';  
+require_once __DIR__ . '/drinks_api.php';
 
 function processRequest(PDO $pdo, array $request): array
 {
@@ -20,9 +20,66 @@ function processRequest(PDO $pdo, array $request): array
         case 'update_password_hash':
             return updatePasswordHash($pdo, $request);
 
+        case 'update_account':
+            return updateAccount($pdo, $request);
+
+        case 'session_create':
+            return createSession($pdo, $request);
+
+        case 'session_validate':
+            return validateSession($pdo, $request);
+
+        case 'session_delete':
+            return deleteSession($pdo, $request);
+
         default:
             return processDrinkRequest($pdo, $request)
                 ?? ['success' => false, 'error' => 'unknown_action'];
+    }
+}
+
+function updateAccount(PDO $pdo, array $request): array
+{
+    $userId = filter_var($request['user_id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+    if ($userId === false || $userId === null) {
+        return ['success' => false, 'error' => 'not_logged_in'];
+    }
+
+    $newUsername = trim((string)($request['new_username'] ?? ''));
+    $newHash     = (string)($request['new_password_hash'] ?? '');
+
+    if ($newUsername === '' && $newHash === '') {
+        return ['success' => false, 'error' => 'nothing_to_update'];
+    }
+
+    try {
+        if ($newUsername !== '') {
+            if (mb_strlen($newUsername) < 2 || mb_strlen($newUsername) > 50) {
+                return ['success' => false, 'error' => 'Username must be between 2 and 50 characters.'];
+            }
+            $stmt = $pdo->prepare('UPDATE users SET username = :u WHERE user_id = :id');
+            $stmt->execute(['u' => $newUsername, 'id' => $userId]);
+        }
+
+        if ($newHash !== '') {
+            $stmt = $pdo->prepare('UPDATE users SET password_hash = :h WHERE user_id = :id');
+            $stmt->execute(['h' => $newHash, 'id' => $userId]);
+        }
+
+        $q = $pdo->prepare('SELECT username FROM users WHERE user_id = :id LIMIT 1');
+        $q->execute(['id' => $userId]);
+        $uname = (string)($q->fetchColumn() ?: $newUsername);
+
+        return [
+            'success'  => true,
+            'username' => $uname,
+            'message'  => 'Account settings updated.'
+        ];
+    } catch (PDOException $e) {
+        if ((int)($e->errorInfo[1] ?? 0) === 1062) {
+            return ['success' => false, 'error' => 'That username is already taken.'];
+        }
+        throw $e;
     }
 }
 
@@ -32,25 +89,15 @@ function registerUser(PDO $pdo, array $request): array
     $email = trim((string)($request['email'] ?? ''));
     $passwordHash = (string)($request['password_hash'] ?? '');
 
-    if (
-        $username === '' ||
-        $email === '' ||
-        $passwordHash === ''
-    ) {
-        return [
-            'success' => false,
-            'error' => 'missing_fields'
-        ];
+    if ($username === '' || $email === '' || $passwordHash === '') {
+        return ['success' => false, 'error' => 'missing_fields'];
     }
 
-    // The backend hashes the password before sending it.
-    // This function stores the supplied hash.
     try {
         $stmt = $pdo->prepare(
             'INSERT INTO users (username, email, password_hash)
              VALUES (:username, :email, :password_hash)'
         );
-
         $stmt->execute([
             'username' => $username,
             'email' => $email,
@@ -63,14 +110,9 @@ function registerUser(PDO $pdo, array $request): array
             'username' => $username
         ];
     } catch (PDOException $e) {
-        // MySQL error 1062: duplicate value for a unique key.
         if ((int)($e->errorInfo[1] ?? 0) === 1062) {
-            return [
-                'success' => false,
-                'error' => 'username_or_email_taken'
-            ];
+            return ['success' => false, 'error' => 'username_or_email_taken'];
         }
-
         throw $e;
     }
 }
@@ -85,10 +127,7 @@ function findLoginUser(PDO $pdo, array $request): array
     ));
 
     if ($identifier === '') {
-        return [
-            'success' => false,
-            'error' => 'missing_identifier'
-        ];
+        return ['success' => false, 'error' => 'missing_identifier'];
     }
 
     $stmt = $pdo->prepare(
@@ -108,14 +147,9 @@ function findLoginUser(PDO $pdo, array $request): array
     $user = $stmt->fetch();
 
     if (!$user) {
-        return [
-            'success' => false,
-            'error' => 'user_not_found'
-        ];
+        return ['success' => false, 'error' => 'user_not_found'];
     }
 
-    // The calling backend verifies the supplied password
-    // against password_hash. Do not send the hash to a browser.
     return [
         'success' => true,
         'user' => [
@@ -134,20 +168,11 @@ function findLoginUser(PDO $pdo, array $request): array
 function updateLoginResult(PDO $pdo, array $request): array
 {
     $success = $request['success'] ?? null;
-    $userId = filter_var(
-        $request['user_id'] ?? null,
-        FILTER_VALIDATE_INT
-    );
-
-    // Username is accepted for compatibility with the
-    // current C# test publisher.
+    $userId = filter_var($request['user_id'] ?? null, FILTER_VALIDATE_INT);
     $username = trim((string)($request['username'] ?? ''));
 
     if (!is_bool($success)) {
-        return [
-            'success' => false,
-            'error' => 'invalid_success_value'
-        ];
+        return ['success' => false, 'error' => 'invalid_success_value'];
     }
 
     if ($userId !== false && $userId !== null) {
@@ -157,10 +182,7 @@ function updateLoginResult(PDO $pdo, array $request): array
         $where = 'username = :identity';
         $identity = $username;
     } else {
-        return [
-            'success' => false,
-            'error' => 'missing_user_identifier'
-        ];
+        return ['success' => false, 'error' => 'missing_user_identifier'];
     }
 
     if ($success) {
@@ -184,62 +206,29 @@ function updateLoginResult(PDO $pdo, array $request): array
     $stmt->execute(['identity' => $identity]);
 
     if ($stmt->rowCount() === 0) {
-        $check = $pdo->prepare(
-            "SELECT user_id FROM users WHERE {$where} LIMIT 1"
-        );
+        $check = $pdo->prepare("SELECT user_id FROM users WHERE {$where} LIMIT 1");
         $check->execute(['identity' => $identity]);
-
         if (!$check->fetch()) {
-            return [
-                'success' => false,
-                'error' => 'user_not_found'
-            ];
+            return ['success' => false, 'error' => 'user_not_found'];
         }
     }
 
-    return [
-        'success' => true,
-        'message' => 'login_result_updated'
-    ];
+    return ['success' => true, 'message' => 'login_result_updated'];
 }
 
-/**
- * Replaces a stored password hash, typically when migrating
- * bcrypt users to argon2id after a successful login.
- *
- * Request fields:
- *   user_id or username   identifies the user
- *   password_hash         the new argon2id hash (required)
- *   old_password_hash     optional. If given, the update applies only
- *                         while the stored hash still equals this value,
- *                         so a concurrent password change is not overwritten.
- */
 function updatePasswordHash(PDO $pdo, array $request): array
 {
     $newHash = (string)($request['password_hash'] ?? '');
-
     if ($newHash === '' || strlen($newHash) > 255) {
-        return [
-            'success' => false,
-            'error' => 'invalid_password_hash'
-        ];
+        return ['success' => false, 'error' => 'invalid_password_hash'];
     }
 
-    // Accept only argon2id so the update can't downgrade a user to bcrypt.
-    // password_get_info() reports 'unknown' for strings that aren't valid hashes.
     $info = password_get_info($newHash);
-
     if (($info['algoName'] ?? '') !== 'argon2id') {
-        return [
-            'success' => false,
-            'error' => 'hash_must_be_argon2id'
-        ];
+        return ['success' => false, 'error' => 'hash_must_be_argon2id'];
     }
 
-    $userId = filter_var(
-        $request['user_id'] ?? null,
-        FILTER_VALIDATE_INT
-    );
+    $userId = filter_var($request['user_id'] ?? null, FILTER_VALIDATE_INT);
     $username = trim((string)($request['username'] ?? ''));
 
     if ($userId !== false && $userId !== null) {
@@ -249,19 +238,11 @@ function updatePasswordHash(PDO $pdo, array $request): array
         $where = 'username = :identity';
         $identity = $username;
     } else {
-        return [
-            'success' => false,
-            'error' => 'missing_user_identifier'
-        ];
+        return ['success' => false, 'error' => 'missing_user_identifier'];
     }
 
-    $sql = "UPDATE users
-            SET password_hash = :new_hash
-            WHERE {$where}";
-    $params = [
-        'identity' => $identity,
-        'new_hash' => $newHash
-    ];
+    $sql = "UPDATE users SET password_hash = :new_hash WHERE {$where}";
+    $params = ['identity' => $identity, 'new_hash' => $newHash];
 
     if (isset($request['old_password_hash'])) {
         $sql .= ' AND password_hash = :old_hash';
@@ -272,40 +253,22 @@ function updatePasswordHash(PDO $pdo, array $request): array
     $stmt->execute($params);
 
     if ($stmt->rowCount() > 0) {
-        return [
-            'success' => true,
-            'message' => 'password_hash_updated'
-        ];
+        return ['success' => true, 'message' => 'password_hash_updated'];
     }
 
-    // No rows changed. Work out why.
-    $check = $pdo->prepare(
-        "SELECT password_hash FROM users WHERE {$where} LIMIT 1"
-    );
+    $check = $pdo->prepare("SELECT password_hash FROM users WHERE {$where} LIMIT 1");
     $check->execute(['identity' => $identity]);
     $row = $check->fetch();
 
     if (!$row) {
-        return [
-            'success' => false,
-            'error' => 'user_not_found'
-        ];
+        return ['success' => false, 'error' => 'user_not_found'];
     }
-
     if ($row['password_hash'] === $newHash) {
-        return [
-            'success' => true,
-            'message' => 'password_hash_already_current'
-        ];
+        return ['success' => true, 'message' => 'password_hash_already_current'];
     }
-
-    // The stored hash differs from old_password_hash, so it changed
-    // after the caller verified it. Leave it alone.
-    return [
-        'success' => false,
-        'error' => 'hash_changed'
-    ];
+    return ['success' => false, 'error' => 'hash_changed'];
 }
+
 function createSession(PDO $pdo, array $req): array {
     $userId = (int)($req['user_id'] ?? 0);
     $token  = (string)($req['token'] ?? '');
@@ -313,7 +276,6 @@ function createSession(PDO $pdo, array $req): array {
         return ['success' => false, 'error' => 'invalid_input'];
     }
 
-    // Opportunistic cleanup of expired sessions
     $pdo->exec("DELETE FROM user_sessions WHERE expires_at <= UTC_TIMESTAMP()");
 
     $hash = hash('sha256', $token);

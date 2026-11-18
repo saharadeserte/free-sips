@@ -6,6 +6,12 @@ if (args.Contains("--test-auth-publisher"))
     await TestAuthPublisher.RunAsync(args);
     return;
 }
+if (args.Contains("--send-tests"))
+{
+    var testBuilder = Host.CreateApplicationBuilder(args);
+    await TestRequestSender.RunAsync(testBuilder.Configuration);
+    return;
+}
 
 // Opt-in mock database worker. Runs alone: no relay, no web server.
 //   dotnet run --no-launch-profile -- --mock-db

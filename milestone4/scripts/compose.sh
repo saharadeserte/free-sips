@@ -18,7 +18,7 @@ case "$ACTION" in
     *) echo "Usage: $0 start|stop|status [service ...]"; exit 1 ;;
 esac
 
-ORDER=(rabbitmq database be-db be-fe frontend frontend2)   # stop runs this in reverse
+ORDER=(rabbitmq rabbit2 rabbit3 database database2 database3 be-db bedb2 be-fe frontend frontend2)   # stop runs this in reverse
 REPO="Capstone-Group-01/milestone4"              # relative to each user's $HOME
 WAIT_SECS="${WAIT_SECS:-60}"
 
@@ -39,26 +39,56 @@ define() {
     SVC_CHECK[$name]="$check"   # runs on the target; exit 0 = up
 }
 
+#RabbitMQ
 define rabbitmq  jja        100.100.36.22  22    "$REPO" \
     "sudo -n systemctl start rabbitmq-server" \
     "sudo -n systemctl stop rabbitmq-server || true" \
     "systemctl is-active --quiet rabbitmq-server"
 
+define rabbit2      rmq2       100.117.84.32  22  "$REPO"\
+     "sudo -n systemctl start rabbitmq-server"\
+     "sudo -n systemctl stop rabbitmq-server || true"\
+     "systemctl is-active --quiet rabbitmq-server"
+
+define rabbit3 rmq3 100.99.135.24 22 "$REPO" \
+    "sudo -n systemctl start rabbitmq-server" \
+    "sudo -n systemctl stop rabbitmq-server || true" \
+    "systemctl is-active --quiet rabbitmq-server"
+
+#databases
 define database  it490sfc   100.123.138.94 22    "$REPO" \
     "bash scripts/start_database.sh" \
     "pkill -f '[a]mqp_co[nm]s' || true" \
     "systemctl is-active --quiet mariadb && pgrep -f '[a]mqp_co[nm]s' >/dev/null"
 
+define database2 database2 100.92.194.98 22 "$REPO" \
+    "bash scripts/start_database.sh" \
+    "pkill -f '[w]orker\.php|[a]mqp_co[nm]s' || true" \
+    "systemctl is-active --quiet mariadb && pgrep -f '[w]orker\.php|[a]mqp_co[nm]s' >/dev/null"
+
+define database3   jja      100.72.228.125  22 "$REPO"\
+    "bash scripts/start_database.sh"\
+    "pkill-f '[w]orker\.php|[a]maqp_co[nm]s' || true"\
+    "systemctl is-active --quiet mariadb && pgrep -f '[w]orker\.php|[a]mqp_co[nm]s' >/dev/null"
+
+#Backend-Databases
 define be-db     pablob123  100.127.68.78  22    "$REPO" \
     "bash scripts/start_be-db.sh" \
     "pkill -x dotnet || true" \
     "curl -fs --max-time 2 http://localhost:5000/ >/dev/null"
 
+define bedb2      bedb2      100.106.76.85   22  "$REPO"\
+     "bash scripts/start_be-db.sh"\
+     "pkill -x dotnet || true"\
+     "curl -fs --max-time 2 http://localhost:5000/ >/dev/null"
+
+#Backend-Frontend
 define be-fe     befe       100.79.8.94    22  "$REPO" \
     "bash scripts/start_be-fe.sh" \
     "sudo -n systemctl stop cocktail-backend 2>/dev/null || true" \
     "curl -fs --max-time 2 http://localhost:5000/ >/dev/null"
 
+#Frontends
 define frontend  frontend   100.82.21.127  22    "$REPO" \
     "bash scripts/start_fe.sh" \
     "fuser -k 7812/tcp 2>/dev/null || true" \
